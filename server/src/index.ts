@@ -74,9 +74,15 @@ const wss = new WebSocketServer({
   server: httpServer,
   maxPayload: CONFIG.maxPayloadBytes,
   verifyClient: (info: { origin?: string; req: http.IncomingMessage }, done: (ok: boolean, code?: number) => void) => {
-    // Browsers always send Origin; reject anything not on the allowlist.
-    // (Non-browser clients can fake this — real protection is auth + validation.)
-    if (info.origin && !CONFIG.allowedOrigins.includes(info.origin)) return done(false, 403);
+    // Browsers always send Origin; reject anything not on the allowlist or vercel subdomains.
+    if (info.origin) {
+      const origin = info.origin.toLowerCase();
+      const isAllowed = CONFIG.allowedOrigins.includes(origin) ||
+                        origin.endsWith('.vercel.app') ||
+                        origin.startsWith('http://localhost') ||
+                        origin.startsWith('http://127.0.0.1');
+      if (!isAllowed) return done(false, 403);
+    }
     if (sessions.size >= CONFIG.maxConnections) return done(false, 503);
     done(true);
   },
