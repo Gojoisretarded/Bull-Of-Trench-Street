@@ -47,7 +47,7 @@ export function sanitizeCoin(v: unknown): Coin | null {
   const id = typeof o.id === 'string' && COIN_ID_RE.test(o.id) ? o.id : null;
   const ticker = typeof o.ticker === 'string' && TICKER_RE.test(o.ticker) ? o.ticker : null;
   const name = safeStr(o.name, 32);
-  const price = finiteNum(o.price, 0.000001, 1e9);
+  const price = finiteNum(o.price, 0, 1e12);
   const change = finiteNum(o.change, -100, 1e6);
   const mcap = safeStr(o.mcap, 12);
   if (!id || !ticker || !name || price === null || change === null || !mcap) return null;

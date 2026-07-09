@@ -150,7 +150,16 @@ function apply(raw: unknown): void {
       const characterId = typeof p.characterId === 'string' ? p.characterId : '';
       const chosen = CHARACTERS.find((c) => c.id === characterId) ?? null;
       const coins = sanitizeCoins(m.coins);
-      if (!username || !chosen || !coins) return;
+      if (!username || !chosen || !coins) {
+        console.error('Multiplayer auth_ok validation failed:', {
+          usernameValid: !!username,
+          chosenValid: !!chosen,
+          coinsValid: !!coins,
+          rawProfile: p,
+          rawCoins: m.coins
+        });
+        return;
+      }
 
       setNetSender(send);
       applyWallet(p);
