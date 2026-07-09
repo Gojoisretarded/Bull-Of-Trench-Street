@@ -53,7 +53,8 @@ const GLOBAL_DEFS = `
   <linearGradient id="g-gb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A4657"/><stop offset="1" stop-color="#232D3A"/></linearGradient>
   <linearGradient id="g-in" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3E7BE8"/><stop offset="1" stop-color="#2452B0"/></linearGradient>
   <linearGradient id="g-lp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF6B6B"/><stop offset="1" stop-color="#C22323"/></linearGradient>
-  <linearGradient id="g-se" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8F5AE8"/><stop offset="1" stop-color="#5A28A8"/></linearGradient>
+  <linearGradient id="g-se" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E2E5EA"/><stop offset="1" stop-color="#9BA3AE"/></linearGradient>
+  <linearGradient id="g-wp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8F5AE8"/><stop offset="1" stop-color="#5A28A8"/></linearGradient>
   <linearGradient id="g-ap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A3546"/><stop offset="1" stop-color="#1A2230"/></linearGradient>
 </defs>
 `;
