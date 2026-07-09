@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRENCH_OS — Security & Threat Model</title>
+<style>
+  :root {
+    --ground: #100B14; --surface: #191320; --surface-2: #221A2B; --line: #322641;
+    --line-soft: #271E33; --ink: #EDE7F2; --muted: #9A8FAA; --faint: #6B617A;
+    --accent: #F5B02E; --accent-dim: #C98F22; --accent-ink: #1A1206;
+    --pump: #34D399; --rug: #F5566E; --brand: #FF4D4D; --glow: rgba(245,176,46,0.14);
+    --crit: #F5566E; --high: #F5943E; --med: #E0C34A;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --maxw: 1080px; --r: 14px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --ground: #F2EEF7; --surface: #FFFFFF; --surface-2: #ECE6F3; --line: #DBD2E6;
+      --line-soft: #E6DEEF; --ink: #211A2B; --muted: #675D74; --faint: #948AA2;
+      --accent: #B4700A; --accent-dim: #8F5A07; --accent-ink: #FFF6E6; --pump: #0E9E6E;
+      --rug: #D0344C; --brand: #DA322F; --glow: rgba(180,112,10,0.12);
+      --crit: #C92A44; --high: #B4680C; --med: #8A7415;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #100B14; --surface: #191320; --surface-2: #221A2B; --line: #322641;
+    --line-soft: #271E33; --ink: #EDE7F2; --muted: #9A8FAA; --faint: #6B617A;
+    --accent: #F5B02E; --accent-dim: #C98F22; --accent-ink: #1A1206; --pump: #34D399;
+    --rug: #F5566E; --brand: #FF4D4D; --glow: rgba(245,176,46,0.14);
+    --crit: #F5566E; --high: #F5943E; --med: #E0C34A;
+  }
+  :root[data-theme="light"] {
+    --ground: #F2EEF7; --surface: #FFFFFF; --surface-2: #ECE6F3; --line: #DBD2E6;
+    --line-soft: #E6DEEF; --ink: #211A2B; --muted: #675D74; --faint: #948AA2;
+    --accent: #B4700A; --accent-dim: #8F5A07; --accent-ink: #FFF6E6; --pump: #0E9E6E;
+    --rug: #D0344C; --brand: #DA322F; --glow: rgba(180,112,10,0.12);
+    --crit: #C92A44; --high: #B4680C; --med: #8A7415;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--sans);
+    line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+  .eyebrow { font-family: var(--mono); font-size: 11.5px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--accent); display: inline-flex; align-items: center; gap: 8px; }
+  .eyebrow::before { content: ""; width: 22px; height: 1px; background: var(--accent); opacity: .6; }
+  h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 800; letter-spacing: -0.02em; }
+
+  .hero { position: relative; border-bottom: 1px solid var(--line); overflow: hidden; }
+  .hero-bg { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 80% at 82% -10%, rgba(245,86,110,0.12), transparent 60%),
+                radial-gradient(90% 60% at 0% 110%, var(--glow), transparent 55%); }
+  .grid-lines { position: absolute; inset: 0; opacity: .5; pointer-events: none;
+    background-image: linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+    background-size: 46px 46px;
+    -webkit-mask-image: radial-gradient(120% 90% at 70% 0%, #000 20%, transparent 75%);
+            mask-image: radial-gradient(120% 90% at 70% 0%, #000 20%, transparent 75%); }
+  .hero-inner { position: relative; padding: 56px 24px 40px; }
+  .hero-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 40px; }
+  .badge-ver { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; color: var(--muted);
+    border: 1px solid var(--line); padding: 5px 10px; border-radius: 100px; }
+  .badge-ver b { color: var(--crit); font-weight: 600; }
+  .hero h1 { font-size: clamp(34px, 6.4vw, 66px); line-height: .99; max-width: 17ch; }
+  .hero h1 .amp { color: var(--accent); }
+  .hero .kicker { font-family: var(--mono); font-size: 13px; color: var(--brand); letter-spacing: .05em; margin-bottom: 18px; display: block; }
+  .lede { margin-top: 22px; max-width: 64ch; font-size: 18px; color: var(--muted); }
+  .lede b { color: var(--ink); font-weight: 600; }
+
+  section { padding: 58px 0; border-bottom: 1px solid var(--line-soft); }
+  .sec-head { margin-bottom: 30px; }
+  .sec-head h2 { font-size: clamp(23px, 3.3vw, 33px); margin-top: 12px; }
+  .sec-head p { color: var(--muted); max-width: 64ch; margin: 12px 0 0; }
+  .idx { font-family: var(--mono); color: var(--faint); font-size: 12px; letter-spacing: .14em; }
+
+  /* PRINCIPLE CALLOUT */
+  .bet { background: linear-gradient(135deg, var(--surface-2), var(--surface)); border: 1px solid var(--line);
+    border-radius: var(--r); padding: 30px; display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: start; }
+  .bet .mark { font-family: var(--mono); font-weight: 700; font-size: 13px; color: var(--accent-ink);
+    background: var(--accent); padding: 8px 12px; border-radius: 8px; white-space: nowrap; }
+  .bet.danger .mark { background: var(--crit); color: #fff; }
+  .bet h3 { font-size: 21px; margin-bottom: 8px; } .bet p { margin: 0; color: var(--muted); } .bet p b { color: var(--ink); }
+  .bet code, code { font-family: var(--mono); font-size: 12.5px; background: var(--surface-2); padding: 1px 6px; border-radius: 5px; color: var(--pump); }
+
+  /* SEVERITY LEGEND */
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .legend .lg { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11.5px;
+    color: var(--muted); border: 1px solid var(--line); border-radius: 100px; padding: 5px 12px; }
+  .legend .sw { width: 9px; height: 9px; border-radius: 2px; }
+
+  /* THREAT LIST */
+  .grp-label { font-family: var(--mono); font-size: 12px; letter-spacing: .16em; text-transform: uppercase;
+    margin: 30px 0 14px; display: flex; align-items: center; gap: 10px; }
+  .grp-label .c { color: var(--crit); } .grp-label .h { color: var(--high); } .grp-label .m { color: var(--med); }
+  .grp-label::after { content: ""; flex: 1; height: 1px; background: var(--line-soft); }
+
+  .threats { display: flex; flex-direction: column; gap: 12px; }
+  .threat { display: grid; grid-template-columns: 44px 1fr; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--surface); overflow: hidden; }
+  .threat .stripe { width: 44px; display: flex; align-items: flex-start; justify-content: center; padding-top: 18px;
+    font-family: var(--mono); font-weight: 700; font-size: 14px; color: #fff; }
+  .threat.crit .stripe { background: var(--crit); } .threat.high .stripe { background: var(--high); } .threat.med .stripe { background: var(--med); color: #2a2410; }
+  .threat .body { padding: 16px 20px; }
+  .threat h3 { font-size: 16.5px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .threat .pill { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 100px; font-weight: 700; }
+  .threat.crit .pill { background: color-mix(in srgb, var(--crit) 18%, transparent); color: var(--crit); }
+  .threat.high .pill { background: color-mix(in srgb, var(--high) 18%, transparent); color: var(--high); }
+  .threat.med .pill { background: color-mix(in srgb, var(--med) 20%, transparent); color: var(--med); }
+  .threat .risk { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+  .threat .fix { font-size: 13.5px; margin: 10px 0 0; padding-left: 20px; position: relative; color: var(--ink); }
+  .threat .fix::before { content: "FIX"; position: absolute; left: 0; top: 2px; font-family: var(--mono); font-size: 8.5px;
+    letter-spacing: .1em; color: var(--pump); font-weight: 700; }
+  .threat .fix { padding-left: 34px; } .threat .fix::before { top: 3px; }
+  .threat .fix b { color: var(--ink); }
+
+  /* CHECKLIST */
+  .phases { display: flex; flex-direction: column; gap: 12px; }
+  .pcard { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); padding: 20px 22px;
+    display: grid; grid-template-columns: 50px 1fr; gap: 20px; }
+  .pcard .pn { font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .pcard h3 { font-size: 16px; margin-bottom: 12px; }
+  .pcard ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .pcard li { font-size: 13.5px; padding-left: 26px; position: relative; color: var(--ink); }
+  .pcard li::before { content: "☐"; position: absolute; left: 0; color: var(--accent); font-family: var(--mono); font-size: 15px; top: -1px; }
+  .pcard li b { color: var(--ink); }
+
+  footer { padding: 40px 0 60px; }
+  .foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; align-items: center; color: var(--faint); font-family: var(--mono); font-size: 12px; }
+  .foot b { color: var(--muted); font-weight: 500; }
+
+  @media (max-width: 680px) {
+    .bet { grid-template-columns: 1fr; }
+    .pcard { grid-template-columns: 1fr; gap: 10px; }
+    .hero-inner { padding: 40px 20px 32px; }
+  }
+</style>
+<style>
+  .theme-toggle{position:fixed;top:16px;right:16px;z-index:50;font-family:var(--mono);font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--surface);
+    border:1px solid var(--line);border-radius:100px;padding:7px 13px;cursor:pointer;display:flex;
+    align-items:center;gap:7px;transition:color .15s,border-color .15s}
+  .theme-toggle:hover{color:var(--accent);border-color:var(--accent-dim)}
+  .theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media print{.theme-toggle{display:none}}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light or dark theme">
+  <span id="themeIcon">◐</span><span id="themeLabel">Theme</span>
+</button>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="grid-lines"></div>
+  <div class="hero-inner wrap">
+    <div class="hero-top">
+      <span class="eyebrow">Security &amp; Threat Model</span>
+      <span class="badge-ver">companion to concept v0.2 · posture <b>MONEY-ON-THE-LINE</b></span>
+    </div>
+    <span class="kicker">// assume $DGENZ can become real value — defend accordingly</span>
+    <h1>The client renders. The server decides.</h1>
+    <p class="lede">
+      This game has a token attached, so an economy bug isn’t cheating — it’s <b>theft</b>. Every
+      balance, price, and PnL number the browser can touch, the browser can forge. This is the
+      threat model to build against, ranked by blast radius, with the fix for each.
+    </p>
+    <div class="legend">
+      <span class="lg"><span class="sw" style="background:var(--crit)"></span> Critical — economy / theft</span>
+      <span class="lg"><span class="sw" style="background:var(--high)"></span> High — abuse / integrity</span>
+      <span class="lg"><span class="sw" style="background:var(--med)"></span> Medium — hardening</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- GOLDEN RULE -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="idx">00 / THE ONE RULE THAT KILLS MOST BUGS</span>
+        <h2>If the browser can assert it, the browser can fake it</h2>
+        <p>Balances, prices, PnL, clout, mining yield — all computed and stored server-side. The client is only ever allowed to <em>request</em> an action, never report an outcome.</p>
+      </div>
+      <div class="bet danger">
+        <span class="mark">GROUND TRUTH</span>
+        <div>
+          <h3>The original stored the wallet balance in <code>localStorage</code>.</h3>
+          <p>
+            That’s editable in three seconds from the dev console — infinite money, for free. It’s
+            the single biggest thing to <b>not</b> repeat. Your wallet lives in Postgres, guarded by
+            the tick service; the tab holds nothing but a cached view it cannot forge.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- THREAT MODEL -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="idx">01 / THE THREAT MODEL</span>
+        <h2>What to defend against, worst first</h2>
+        <p>Nothing here exists to exploit yet — it’s the checklist of attacks the architecture must make impossible by design.</p>
+      </div>
+
+      <div class="grp-label"><span class="c">■</span> Critical · economy &amp; theft</div>
+      <div class="threats">
+        <div class="threat crit"><div class="stripe">01</div><div class="body">
+          <h3>Client-authoritative money <span class="pill">critical</span></h3>
+          <p class="risk">Balance / price / PnL held or asserted by the client → edit it, mint infinite currency. The original’s fatal flaw.</p>
+          <p class="fix">Money state lives <b>only</b> server-side. Client sends intents (“buy 2 of $CMR”), server validates funds and computes the result.</p>
+        </div></div>
+        <div class="threat crit"><div class="stripe">02</div><div class="body">
+          <h3>The real-money bridge <span class="pill">crown jewel</span></h3>
+          <p class="risk">The instant in-game currency converts to real SOL, every economy bug becomes a withdrawal exploit.</p>
+          <p class="fix">Treat cash-out as a hardened boundary: <b>signature verification, withdrawal limits, time delays, manual review thresholds</b>. Keep funny-money and on-chain value separate until you deliberately bridge them.</p>
+        </div></div>
+        <div class="threat crit"><div class="stripe">03</div><div class="body">
+          <h3>Double-spend / race conditions <span class="pill">critical</span></h3>
+          <p class="risk">Fire 10 concurrent sells before the first settles → spend currency you don’t have.</p>
+          <p class="fix">DB transactions + <b>row-level locks</b> on the wallet, <b>idempotency keys</b> on every trade, atomic balance checks. No read-then-write gaps.</p>
+        </div></div>
+        <div class="threat crit"><div class="stripe">04</div><div class="body">
+          <h3>Trade input validation <span class="pill">critical</span></h3>
+          <p class="risk">Negative amounts, overflow, or executing against a stale/spoofed price.</p>
+          <p class="fix">Schema-validate every intent (Zod/TypeBox). Server <b>re-reads the live price at execution</b> — never trusts a client-supplied price or amount.</p>
+        </div></div>
+      </div>
+
+      <div class="grp-label"><span class="h">■</span> High · abuse &amp; integrity</div>
+      <div class="threats">
+        <div class="threat high"><div class="stripe">05</div><div class="body">
+          <h3>Fake “verified” PnL <span class="pill">high</span></h3>
+          <p class="risk">If the flex/larp system trusts a client-submitted number or screenshot, everyone verifies as real and the mechanic dies.</p>
+          <p class="fix"><b>Real PnL is computed server-side from the ledger</b> — the client cannot claim it. Larp = an explicitly unverified post.</p>
+        </div></div>
+        <div class="threat high"><div class="stripe">06</div><div class="body">
+          <h3>Market manipulation <span class="pill">high</span></h3>
+          <p class="risk">Wash trading (self-buys faking volume), Sybil accounts pumping one coin, front-running the tick.</p>
+          <p class="fix">Per-account + per-IP limits, wash-trade detection, launch cooldowns, and <b>never expose the next tick</b> to clients.</p>
+        </div></div>
+        <div class="threat high"><div class="stripe">07</div><div class="body">
+          <h3>Stored XSS in user content <span class="pill">high</span></h3>
+          <p class="risk">Coin names, usernames, and feed posts render to everyone. A coin named <code>&lt;script&gt;</code> steals sessions.</p>
+          <p class="fix">Escape/sanitize all user content on output, strict <b>Content-Security-Policy</b>, and never <code>dangerouslySetInnerHTML</code> on user data.</p>
+        </div></div>
+        <div class="threat high"><div class="stripe">08</div><div class="body">
+          <h3>WebSocket trust <span class="pill">high</span></h3>
+          <p class="risk">Unauthenticated sockets, clients subscribing to channels they shouldn’t, spoofed WS messages.</p>
+          <p class="fix">Authenticate on connect, authorize <b>every</b> channel subscription, treat all inbound socket messages as untrusted intents.</p>
+        </div></div>
+        <div class="threat high"><div class="stripe">09</div><div class="body">
+          <h3>AI / NPC proxy abuse <span class="pill">high</span></h3>
+          <p class="risk">Prompt injection, jailbreaks, and cost abuse — spamming NPC chats to run up your Claude bill.</p>
+          <p class="fix">Key stays server-side only. <b>Per-user rate + spend caps</b>, capped history/token length, input moderation, <code>claude-haiku-4-5</code> for cheap chatter.</p>
+        </div></div>
+      </div>
+
+      <div class="grp-label"><span class="m">■</span> Medium · hardening</div>
+      <div class="threats">
+        <div class="threat med"><div class="stripe">10</div><div class="body">
+          <h3>Auth &amp; recovery codes <span class="pill">medium</span></h3>
+          <p class="risk">The frictionless recovery-code save is an account-takeover vector if codes are guessable.</p>
+          <p class="fix"><b>High-entropy codes, hashed at rest, rate-limited redemption</b>, no account enumeration.</p>
+        </div></div>
+        <div class="threat med"><div class="stripe">11</div><div class="body">
+          <h3>SQL injection <span class="pill">medium</span></h3>
+          <p class="risk">String-built queries let an attacker read or wipe the ledger.</p>
+          <p class="fix">Parameterized queries / an ORM (<b>Prisma or Drizzle</b>). Never concatenate SQL.</p>
+        </div></div>
+        <div class="threat med"><div class="stripe">12</div><div class="body">
+          <h3>CSRF <span class="pill">medium</span></h3>
+          <p class="risk">Cookie sessions with <code>credentials: include</code> (what the original uses) are CSRF-able.</p>
+          <p class="fix"><b>SameSite cookies + CSRF tokens</b>, tight CORS allowlist.</p>
+        </div></div>
+        <div class="threat med"><div class="stripe">13</div><div class="body">
+          <h3>Mining / time exploits <span class="pill">medium</span></h3>
+          <p class="risk">“Claim every 20 min” checked client-side = infinite money via clock manipulation.</p>
+          <p class="fix">Accrual computed from <b>server timestamps only</b>; claims are idempotent.</p>
+        </div></div>
+        <div class="threat med"><div class="stripe">14</div><div class="body">
+          <h3>Secrets leakage <span class="pill">medium</span></h3>
+          <p class="risk">API keys or DB creds bundled into the client build.</p>
+          <p class="fix">Nothing sensitive in the frontend. Env vars server-side, and <b>scan the bundle before every ship</b>.</p>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECURITY PER PHASE -->
+  <section style="border-bottom:none;">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="idx">02 / BAKE IT INTO THE BUILD</span>
+        <h2>Each phase ships with its own defenses</h2>
+        <p>Security isn’t a phase at the end — it’s a checklist attached to every phase of the roadmap. Don’t advance until the box is ticked.</p>
+      </div>
+      <div class="phases">
+        <div class="pcard"><div class="pn">1</div><div>
+          <h3>The first trade</h3>
+          <ul>
+            <li><b>Server-authoritative wallet</b> — balance never leaves Postgres</li>
+            <li>Schema validation + idempotency keys on the trade endpoint</li>
+            <li>Row locks / transactions so concurrent trades can’t double-spend</li>
+          </ul>
+        </div></div>
+        <div class="pcard"><div class="pn">2</div><div>
+          <h3>Create + living market</h3>
+          <ul>
+            <li>Price re-read server-side at execution; next tick never exposed</li>
+            <li>Mining accrual from <b>server time only</b></li>
+            <li>Sanitize coin names/tickers (XSS) at creation</li>
+          </ul>
+        </div></div>
+        <div class="pcard"><div class="pn">3</div><div>
+          <h3>Feed + flex/larp</h3>
+          <ul>
+            <li>PnL <b>verified from the ledger</b>, not client-submitted</li>
+            <li>Output-escape all posts + strict CSP</li>
+            <li>Redis rate limits on posting; wash-trade / Sybil detection</li>
+          </ul>
+        </div></div>
+        <div class="pcard"><div class="pn">4</div><div>
+          <h3>Characters + NPCs</h3>
+          <ul>
+            <li>Claude key server-side only; per-user spend + rate caps</li>
+            <li>Cap conversation history/tokens; moderate NPC inputs</li>
+            <li>Authenticated + authorized WebSocket channels</li>
+          </ul>
+        </div></div>
+        <div class="pcard"><div class="pn">5</div><div>
+          <h3>Polish + launch</h3>
+          <ul>
+            <li>Recovery codes: high-entropy, hashed, rate-limited</li>
+            <li>CSRF + CORS lockdown; secrets scan on the bundle</li>
+            <li><b>If cashing out to real SOL:</b> harden the withdrawal bridge — limits, delays, signature checks, review</li>
+          </ul>
+        </div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span><b>TRENCH_OS</b> — security &amp; threat model · companion to concept v0.2</span>
+    <span>the client renders · the server decides</span>
+  </div>
+</footer>
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeToggle'),
+      icon=document.getElementById('themeIcon'), label=document.getElementById('themeLabel');
+  function sysDark(){return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;}
+  function current(){return root.getAttribute('data-theme')||(sysDark()?'dark':'light');}
+  function apply(t){root.setAttribute('data-theme',t);var d=t==='dark';icon.textContent=d?'☾':'☀';label.textContent=d?'Dark':'Light';
+    try{localStorage.setItem('trenchos.theme',t);}catch(e){}}
+  var saved;try{saved=localStorage.getItem('trenchos.theme');}catch(e){}
+  apply(saved||current());
+  btn.addEventListener('click',function(){apply(current()==='dark'?'light':'dark');});
+})();
+</script>
+</body>
+</html>

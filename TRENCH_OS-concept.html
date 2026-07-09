@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRENCH_OS — Game Concept & Build Plan</title>
+<style>
+  :root {
+    --ground: #100B14; --surface: #191320; --surface-2: #221A2B; --line: #322641;
+    --line-soft: #271E33; --ink: #EDE7F2; --muted: #9A8FAA; --faint: #6B617A;
+    --accent: #F5B02E; --accent-dim: #C98F22; --accent-ink: #1A1206;
+    --pump: #34D399; --rug: #F5566E; --brand: #FF4D4D; --glow: rgba(245,176,46,0.14);
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --maxw: 1080px; --r: 14px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --ground: #F2EEF7; --surface: #FFFFFF; --surface-2: #ECE6F3; --line: #DBD2E6;
+      --line-soft: #E6DEEF; --ink: #211A2B; --muted: #675D74; --faint: #948AA2;
+      --accent: #B4700A; --accent-dim: #8F5A07; --accent-ink: #FFF6E6; --pump: #0E9E6E;
+      --rug: #D0344C; --brand: #DA322F; --glow: rgba(180,112,10,0.12);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #100B14; --surface: #191320; --surface-2: #221A2B; --line: #322641;
+    --line-soft: #271E33; --ink: #EDE7F2; --muted: #9A8FAA; --faint: #6B617A;
+    --accent: #F5B02E; --accent-dim: #C98F22; --accent-ink: #1A1206; --pump: #34D399;
+    --rug: #F5566E; --brand: #FF4D4D; --glow: rgba(245,176,46,0.14);
+  }
+  :root[data-theme="light"] {
+    --ground: #F2EEF7; --surface: #FFFFFF; --surface-2: #ECE6F3; --line: #DBD2E6;
+    --line-soft: #E6DEEF; --ink: #211A2B; --muted: #675D74; --faint: #948AA2;
+    --accent: #B4700A; --accent-dim: #8F5A07; --accent-ink: #FFF6E6; --pump: #0E9E6E;
+    --rug: #D0344C; --brand: #DA322F; --glow: rgba(180,112,10,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--sans);
+    line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+  .eyebrow { font-family: var(--mono); font-size: 11.5px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--accent); display: inline-flex; align-items: center; gap: 8px; }
+  .eyebrow::before { content: ""; width: 22px; height: 1px; background: var(--accent); opacity: .6; }
+
+  h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 800; letter-spacing: -0.02em; }
+
+  /* HERO */
+  .hero { position: relative; border-bottom: 1px solid var(--line); overflow: hidden; }
+  .hero-bg { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 80% at 82% -10%, var(--glow), transparent 60%),
+                radial-gradient(90% 60% at 0% 110%, rgba(255,77,77,0.06), transparent 55%); }
+  .grid-lines { position: absolute; inset: 0; opacity: .5; pointer-events: none;
+    background-image: linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+    background-size: 46px 46px;
+    -webkit-mask-image: radial-gradient(120% 90% at 70% 0%, #000 20%, transparent 75%);
+            mask-image: radial-gradient(120% 90% at 70% 0%, #000 20%, transparent 75%); }
+  .hero-inner { position: relative; padding: 56px 24px 40px; }
+  .hero-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 40px; }
+  .badge-ver { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; color: var(--muted);
+    border: 1px solid var(--line); padding: 5px 10px; border-radius: 100px; }
+  .badge-ver b { color: var(--pump); font-weight: 600; }
+  .hero h1 { font-size: clamp(38px, 7vw, 76px); line-height: .98; max-width: 16ch; }
+  .hero h1 .amp { color: var(--accent); }
+  .hero .kicker { font-family: var(--mono); font-size: 13px; color: var(--brand); letter-spacing: .05em; margin-bottom: 18px; display: block; }
+  .lede { margin-top: 22px; max-width: 62ch; font-size: 18px; color: var(--muted); }
+  .lede b { color: var(--ink); font-weight: 600; }
+
+  .ticker { margin-top: 34px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    overflow: hidden; background: color-mix(in srgb, var(--surface) 60%, transparent); }
+  .ticker-track { display: flex; gap: 34px; padding: 11px 0; white-space: nowrap; font-family: var(--mono);
+    font-size: 12.5px; letter-spacing: .03em; width: max-content; animation: slide 34s linear infinite; }
+  .ticker-track span { color: var(--faint); }
+  .ticker-track .up { color: var(--pump); } .ticker-track .dn { color: var(--rug); }
+  .ticker-track .tk { color: var(--ink); font-weight: 600; }
+  @keyframes slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; } }
+
+  /* SECTIONS */
+  section { padding: 60px 0; border-bottom: 1px solid var(--line-soft); }
+  .sec-head { margin-bottom: 32px; }
+  .sec-head h2 { font-size: clamp(24px, 3.4vw, 34px); margin-top: 12px; }
+  .sec-head p { color: var(--muted); max-width: 62ch; margin: 12px 0 0; }
+  .idx { font-family: var(--mono); color: var(--faint); font-size: 12px; letter-spacing: .14em; }
+
+  /* CALLOUT */
+  .bet { background: linear-gradient(135deg, var(--surface-2), var(--surface)); border: 1px solid var(--line);
+    border-radius: var(--r); padding: 30px; display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: start; }
+  .bet .mark { font-family: var(--mono); font-weight: 700; font-size: 13px; color: var(--accent-ink);
+    background: var(--accent); padding: 8px 12px; border-radius: 8px; white-space: nowrap; }
+  .bet h3 { font-size: 21px; margin-bottom: 8px; } .bet p { margin: 0; color: var(--muted); } .bet p b { color: var(--ink); }
+
+  /* CORE LOOP */
+  .loop { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; }
+  .loop .step { flex: 1 1 140px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+    padding: 16px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 130px; }
+  .loop .step .s-n { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: .1em; }
+  .loop .step .s-t { font-weight: 700; font-size: 15px; }
+  .loop .step .s-d { font-size: 12.5px; color: var(--muted); }
+  .loop .arw { display: flex; align-items: center; color: var(--faint); font-family: var(--mono); }
+  .loop .step.hot { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); box-shadow: inset 0 0 0 1px var(--glow); }
+  .loop .step.hot .s-t { color: var(--accent); }
+  .loop-note { margin-top: 16px; font-family: var(--mono); font-size: 12.5px; color: var(--faint); text-align: center; }
+  .loop-note b { color: var(--pump); }
+
+  /* ROSTER */
+  .roster { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+  .char { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); padding: 20px;
+    display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden; }
+  .char.flag { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: linear-gradient(165deg, var(--surface-2), var(--surface)); }
+  .char .emoji { font-size: 26px; }
+  .char h3 { font-size: 18px; }
+  .char .tag { font-family: var(--mono); font-size: 11px; color: var(--brand); letter-spacing: .04em; text-transform: uppercase; }
+  .char p { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .char .meta { display: flex; gap: 14px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line-soft);
+    font-family: var(--mono); font-size: 11.5px; }
+  .char .meta .k { color: var(--faint); } .char .meta .v { color: var(--ink); font-weight: 600; }
+  .char .flagpin { position: absolute; top: 12px; right: 12px; font-family: var(--mono); font-size: 9.5px;
+    letter-spacing: .1em; color: var(--accent-ink); background: var(--accent); padding: 3px 7px; border-radius: 100px; }
+  .heat { color: var(--pump); } .heat.mid { color: var(--accent); } .heat.hi { color: var(--rug); }
+
+  /* VERSUS */
+  .versus { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0; align-items: stretch; }
+  .vs-side { border: 1px solid var(--line); background: var(--surface); padding: 24px; }
+  .vs-side:first-child { border-radius: var(--r) 0 0 var(--r); }
+  .vs-side:last-child { border-radius: 0 var(--r) var(--r) 0; border-left: none; }
+  .vs-mid { display: flex; align-items: center; justify-content: center; font-family: var(--mono);
+    font-weight: 700; color: var(--faint); background: var(--surface-2); border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line); padding: 0 14px; }
+  .vs-side h3 { font-size: 19px; display: flex; align-items: center; gap: 8px; }
+  .vs-side .role { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+  .vs-side p { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+  .vs-side ul { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+  .vs-side li { font-size: 13.5px; padding-left: 20px; position: relative; color: var(--ink); }
+  .vs-side li::before { content: "→"; position: absolute; left: 0; color: var(--accent); font-family: var(--mono); }
+
+  /* FLEX / LARP */
+  .fl { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .fl-card { border: 1px solid var(--line); border-radius: var(--r); padding: 22px; background: var(--surface); }
+  .fl-card.flex { border-color: color-mix(in srgb, var(--pump) 40%, var(--line)); }
+  .fl-card.larp { border-color: color-mix(in srgb, var(--rug) 40%, var(--line)); }
+  .fl-card h3 { font-size: 18px; display: flex; align-items: center; gap: 9px; }
+  .fl-card.flex h3 span.dot { color: var(--pump); } .fl-card.larp h3 span.dot { color: var(--rug); }
+  .fl-card p { color: var(--muted); font-size: 14px; margin: 10px 0 0; }
+  .fl-card .out { margin-top: 14px; font-family: var(--mono); font-size: 12.5px; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); }
+  .fl-card.flex .out b { color: var(--pump); } .fl-card.larp .out b { color: var(--rug); }
+
+  /* STACK TABLE */
+  .stack { display: flex; flex-direction: column; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+  .row { display: grid; grid-template-columns: 160px 1fr; gap: 20px; background: var(--surface); padding: 16px 22px; }
+  .row:hover { background: var(--surface-2); }
+  .row .layer { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--accent); text-transform: uppercase; padding-top: 2px; }
+  .row .pick { color: var(--ink); font-size: 15px; } .row .pick b { font-weight: 700; }
+  .row .why { color: var(--muted); font-size: 13.5px; margin-top: 3px; }
+  code { font-family: var(--mono); font-size: 12px; background: var(--surface-2); padding: 1px 5px; border-radius: 5px; color: var(--pump); }
+
+  /* SPLIT (engine vs worldpack) */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .split .col { border: 1px solid var(--line); border-radius: var(--r); padding: 22px; background: var(--surface); }
+  .split .col.engine { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+  .split .col h3 { font-size: 17px; margin-bottom: 4px; }
+  .split .col .sub { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-bottom: 14px; }
+  .split .col.engine .sub { color: var(--accent); }
+  .split ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .split li { font-size: 13.5px; padding-left: 18px; position: relative; color: var(--ink); }
+  .split .col.engine li::before { content: "▪"; position: absolute; left: 0; color: var(--accent); }
+  .split .col.world li::before { content: "◇"; position: absolute; left: 0; color: var(--muted); }
+
+  /* TRACKS */
+  .tracks { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .track { border: 1px solid var(--line); border-radius: var(--r); padding: 24px; background: var(--surface); }
+  .track.reco { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); background: linear-gradient(160deg, var(--surface-2), var(--surface)); }
+  .track h3 { font-size: 18px; display: flex; align-items: center; gap: 10px; }
+  .track .pill { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; padding: 3px 8px; border-radius: 100px; text-transform: uppercase; }
+  .track.reco .pill { background: var(--accent); color: var(--accent-ink); }
+  .track .pill.alt { border: 1px solid var(--line); color: var(--muted); }
+  .track .for { font-size: 13px; color: var(--muted); margin: 6px 0 16px; }
+  .track dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; font-size: 13.5px; }
+  .track dt { font-family: var(--mono); font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: .06em; padding-top: 2px; }
+  .track dd { margin: 0; color: var(--ink); }
+
+  /* ROADMAP */
+  .road { display: flex; flex-direction: column; }
+  .phase { display: grid; grid-template-columns: 56px 1fr; gap: 22px; padding: 18px 0; border-top: 1px solid var(--line-soft); }
+  .phase:first-child { border-top: none; }
+  .phase .num { font-family: var(--mono); font-size: 28px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .phase .p-body h3 { font-size: 17px; margin-bottom: 4px; }
+  .phase .p-goal { font-family: var(--mono); font-size: 11.5px; color: var(--pump); letter-spacing: .03em; margin-bottom: 8px; }
+  .phase .p-body p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  footer { padding: 40px 0 60px; }
+  .foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; align-items: center; color: var(--faint); font-family: var(--mono); font-size: 12px; }
+  .foot b { color: var(--muted); font-weight: 500; }
+
+  @media (max-width: 680px) {
+    .bet { grid-template-columns: 1fr; }
+    .row { grid-template-columns: 1fr; gap: 6px; }
+    .tracks, .fl, .split { grid-template-columns: 1fr; }
+    .versus { grid-template-columns: 1fr; }
+    .vs-side:first-child { border-radius: var(--r) var(--r) 0 0; }
+    .vs-side:last-child { border-radius: 0 0 var(--r) var(--r); border-left: 1px solid var(--line); border-top: none; }
+    .vs-mid { border-radius: 0; padding: 8px; }
+    .hero-inner { padding: 40px 20px 32px; }
+  }
+</style>
+<style>
+  .theme-toggle{position:fixed;top:16px;right:16px;z-index:50;font-family:var(--mono);font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--surface);
+    border:1px solid var(--line);border-radius:100px;padding:7px 13px;cursor:pointer;display:flex;
+    align-items:center;gap:7px;transition:color .15s,border-color .15s}
+  .theme-toggle:hover{color:var(--accent);border-color:var(--accent-dim)}
+  .theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media print{.theme-toggle{display:none}}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light or dark theme">
+  <span id="themeIcon">◐</span><span id="themeLabel">Theme</span>
+</button>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="grid-lines"></div>
+  <div class="hero-inner wrap">
+    <div class="hero-top">
+      <span class="eyebrow">Game Concept &amp; Build Plan</span>
+      <span class="badge-ver">draft v0.2 · status <b>CONCEPT LOCKED</b></span>
+    </div>
+    <span class="kicker">// TRENCH_OS — working title, swap anytime</span>
+    <h1>From broke<span class="amp">,</span> to top dog<span class="amp">.</span></h1>
+    <p class="lede">
+      A <b>Solana degen come-up simulator</b>. You inherit $5,000 in SOL from parents you just lost,
+      fall into the trenches, and lose it all. This is the climb back. Pick <b>who you are</b>,
+      then <b>trade coins or mint your own memes</b> — whatever prints — and farm clout by flexing
+      real gains, or <b>larping</b> them. Fun first. No spreadsheets.
+    </p>
+
+    <div class="ticker">
+      <div class="ticker-track">
+        <span class="tk">$GRUMP</span><span class="up">+412%</span>
+        <span class="tk">YOUR_BAG</span><span>$5,000 → ??</span>
+        <span class="tk">$WOJAK</span><span class="dn">−42.0%</span>
+        <span class="tk">CLOUT</span><span class="up">▲ 1.2K followers</span>
+        <span class="tk">$HODL</span><span class="up">+289%</span>
+        <span class="tk">LARP_CAUGHT</span><span class="dn">−400 rep</span>
+        <span class="tk">$CMR</span><span class="up">+125%</span>
+        <span class="tk">$GRUMP</span><span class="up">+412%</span>
+        <span class="tk">YOUR_BAG</span><span>$5,000 → ??</span>
+        <span class="tk">$WOJAK</span><span class="dn">−42.0%</span>
+        <span class="tk">CLOUT</span><span class="up">▲ 1.2K followers</span>
+        <span class="tk">$HODL</span><span class="up">+289%</span>
+        <span class="tk">LARP_CAUGHT</span><span class="dn">−400 rep</span>
+        <span class="tk">$CMR</span><span class="up">+125%</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- NORTH STAR -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="idx">00 / THE NORTH STAR</span>
+        <h2>Fun first. Simple enough to play with your thumbs.</h2>
+        <p>Every decision serves one rule: is it fun, and is it easy to get? The simulator is the toy. If a feature needs a tutorial longer than a tweet, it’s too complicated — cut it or hide it.</p>
+      </div>
+      <div class="bet">
+        <span class="mark">THE PITCH</span>
+        <div>
+          <h3>“One more trade.”</h3>
+          <p>
+            A degen fantasy you can open in a browser and *get* in ten seconds: you’re broke, the
+            trenches are live, and you either read the chart or make the meme everyone else apes.
+            Get rich, get famous, and never stop posting. <b>That’s the game.</b> Everything below
+            is in service of that feeling.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CORE LOOP -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="idx">01 / THE CORE LOOP</span>
+        <h2>The whole game on one line</h2>
+        <p>This is the heartbeat. Everything else is flavor bolted onto this cycle.</p>
+      </div>
+      <div class="loop">
+        <div class="step"><span class="s-n">01</span><span class="s-t">Pick your degen</span><span class="s-d">Choose your character &amp; come-up story</span></div>
+        <div class="arw">→</div>
+        <div class="step hot"><span class="s-n">02</span><span class="s-t">Trade or create</span><span class="s-d">Ape coins, or mint your own meme</span></div>
+        <div class="arw">→</div>
+        <div class="step"><span class="s-n">03</span><span class="s-t">Stack SOL</span><span class="s-d">Whatever prints more, that’s the play</span></div>
+        <div class="arw">→</div>
+        <div class="step hot"><span class="s-n">04</span><span class="s-t">Flex or larp</span><span class="s-d">Post PnL to grow your clout</span></div>
+        <div class="arw">→</div>
+        <div class="step"><span class="s-n">05</span><span class="s-t">Climb ranks</span><span class="s-d">Broke → known → top dog</span></div>
+      </div>
+      <p class="loop-note">↻ &nbsp; more money → more clout → your posts move the market → <b>more money</b></p>
+    </div>
+  </section>
+
+  <!-- CHARACTER SELECT -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="idx">02 / PICK YOUR DEGEN</span>
+        <h2>Same trenches. Different person you step into.</h2>
+        <p>At login you choose a character — each one is a different come-up story, starting bag, and vibe. Purely a story/flavor choice; everyone plays the same live market. Easy to add more later (they’re just content).</p>
+      </div>
+      <div class="roster">
+        <div class="char flag">
+          <span class="flagpin">FLAGSHIP</span>
+          <span class="emoji">🕊️</span>
+          <h3>The Orphan</h3>
+          <span class="tag">the canon story</span>
+          <p>Just buried both parents. All that’s left is $5,000 in SOL. Falls into the trenches trying to find his feet, loses everything — then refuses to quit.</p>
+          <div class="meta"><span><span class="k">bag </span><span class="v">$5,000</span></span><span><span class="k">heat </span><span class="v heat mid">MEDIUM</span></span></div>
+        </div>
+        <div class="char">
+          <span class="emoji">😤</span>
+          <h3>The Fumbler</h3>
+          <span class="tag">redemption arc</span>
+          <p>Paper-handed a 100x at 2x. Can’t sleep over it. Down to scraps and hunting the trade that makes it right.</p>
+          <div class="meta"><span><span class="k">bag </span><span class="v">$2,000</span></span><span><span class="k">heat </span><span class="v heat hi">HIGH</span></span></div>
+        </div>
+        <div class="char">
+          <span class="emoji">💰</span>
+          <h3>The Nepo</h3>
+          <span class="tag">prove yourself</span>
+          <p>Started on daddy’s allowance. Rich, but nobody respects it. Easy money, <b>hard clout</b> — you have to earn the trenches’ respect.</p>
+          <div class="meta"><span><span class="k">bag </span><span class="v">$50,000</span></span><span><span class="k">heat </span><span class="v heat">EASY $ / HARD REP</span></span></div>
+        </div>
+        <div class="char">
+          <span class="emoji">🎰</span>
+          <h3>The Addict</h3>
+          <span class="tag">high tension</span>
+          <p>Swore he’d quit — after one last win. Trading the rent money. Highest risk, highest drama come-up in the game.</p>
+          <div class="meta"><span><span class="k">bag </span><span class="v">$800</span></span><span><span class="k">heat </span><span class="v heat hi">BRUTAL</span></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TWO WAYS TO PLAY -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="idx">03 / TWO WAYS TO PLAY</span>
+        <h2>Read the chart, or be the reason it moves</h2>
+        <p>Both hit the same wallet. Play one, play both, switch whenever. Whatever makes you more money is the right answer.</p>
+      </div>
+      <div class="versus">
+        <div class="vs-side">
+          <div class="role">Path A</div>
+          <h3>📈 The Trader</h3>
+          <p>Live off other people’s coins. Spot the pump, dodge the rug, size up, take profit.</p>
+          <ul>
+            <li>Buy low / sell high on the shared market</li>
+            <li>Read charts, momentum, and the feed for alpha</li>
+            <li>Skill = timing and nerve</li>
+          </ul>
+        </div>
+        <div class="vs-mid">OR</div>
+        <div class="vs-side">
+          <div class="role">Path B</div>
+          <h3>🎨 The Creator</h3>
+          <p>Be the casino, not the gambler. Mint your own memecoin, hype it, and ride the wave you started.</p>
+          <ul>
+            <li>Launch a coin on a bonding curve in seconds</li>
+            <li>Shill it on the feed to pull in real buyers</li>
+            <li>Skill = narrative and timing your exit</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLEX OR LARP -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="idx">04 / THE SIGNATURE MECHANIC</span>
+        <h2>Flex or larp — the thing his game doesn’t have</h2>
+        <p>Your social rating decays if you go quiet, so you <em>have</em> to keep posting. Every post is a choice: show your real bag, or fake it. This is what makes the world yours.</p>
+      </div>
+      <div class="fl">
+        <div class="fl-card flex">
+          <h3><span class="dot">●</span> FLEX</h3>
+          <p>Post your <b>real</b> PnL. Verified straight from your wallet, so it counts double — the trenches respect receipts. But you can only flex what you actually made.</p>
+          <div class="out"><b>caught real →</b> clout moons, posts move markets harder</div>
+        </div>
+        <div class="fl-card larp">
+          <h3><span class="dot">●</span> LARP</h3>
+          <p>Fake the gains. Post a screenshot of a bag you don’t have to farm clout you didn’t earn. Fast and free — until someone calls your bluff.</p>
+          <div class="out"><b>caught lying →</b> rep nuked, followers bleed, name tarnished</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLOUT = LEVERAGE -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="idx">05 / CLOUT = LEVERAGE</span>
+        <h2>Money buys fame. Fame moves markets.</h2>
+        <p>Social stats aren’t vanity — they’re a weapon, tied directly to how well you trade.</p>
+      </div>
+      <div class="bet">
+        <span class="mark">THE FLYWHEEL</span>
+        <div>
+          <h3>Get rich → get famous → your word pumps coins → get richer.</h3>
+          <p>
+            The more you make, the more your social rating climbs. High enough, and a single post
+            from you sends real buy pressure into a coin — including your own. But the rating
+            <b>decays when you go quiet</b>, so you’re never done. Keep trading, keep posting, keep
+            proving it. That tension is the engine of the whole social loop.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ONE LIVE WORLD -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="idx">06 / ONE LIVE WORLD</span>
+        <h2>Everyone in the same trenches, at the same time</h2>
+        <p>The “way cooler” version, and worth the effort: a single shared, live market instead of a solo sandbox.</p>
+      </div>
+      <div class="bet">
+        <span class="mark">STRETCH GOAL</span>
+        <div>
+          <h3>A real market, not a scripted one.</h3>
+          <p>
+            Coins live on <b>bonding curves</b> that respond to actual player buys and sells — so a
+            pump is real demand, and a rug is real people bailing. Your shills move real prices;
+            other players’ moves move yours. This is the single upgrade that turns a toy into a
+            world. <b>Ship solo-first if needed, wire the live market in right after.</b>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- UNDER THE HOOD -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="idx">07 / UNDER THE HOOD</span>
+        <h2>What to build it with</h2>
+        <p>Chosen so a solo dev can ship fast without repainting into a corner when players show up.</p>
+      </div>
+      <div class="stack">
+        <div class="row"><div class="layer">Client</div><div>
+          <div class="pick"><b>React + TypeScript + Vite</b>, Tailwind, framer-motion</div>
+          <div class="why">The fake-desktop simulator UI. TypeScript is non-negotiable once real money-state exists.</div></div></div>
+        <div class="row"><div class="layer">State</div><div>
+          <div class="pick"><b>Zustand</b> (UI / windows) · <b>TanStack Query</b> (server data)</div>
+          <div class="why">Zustand runs the desktop shell; Query owns anything the server is source-of-truth for.</div></div></div>
+        <div class="row"><div class="layer">Realtime</div><div>
+          <div class="pick"><b>WebSockets</b> — live market, feed, PnL posts, clout updates</div>
+          <div class="why">One shared world needs a live pipe. Powers the flex/larp feed and moving prices.</div></div></div>
+        <div class="row"><div class="layer">Backend</div><div>
+          <div class="pick"><b>Node + Fastify</b>, REST for player “intents” (buy, mint, post)</div>
+          <div class="why">Fast and schema-first — validate every action at the door. Client asks, server decides.</div></div></div>
+        <div class="row"><div class="layer">Game loop</div><div>
+          <div class="pick"><b>Tick worker</b> — owns the market, moves prices, resolves curves</div>
+          <div class="why">The only thing allowed to move a price. Keeps the sim consistent for everyone.</div></div></div>
+        <div class="row"><div class="layer">Data</div><div>
+          <div class="pick"><b>Postgres</b> (wallets, coins, posts, clout) · <b>Redis</b> (live prices, leaderboards, anti-spam)</div>
+          <div class="why">Postgres is the ledger of record; Redis is speed, ranks, and rate limits.</div></div></div>
+        <div class="row"><div class="layer">NPCs</div><div>
+          <div class="pick"><b>Claude API</b> — server-side, per-character personalities</div>
+          <div class="why"><code>claude-haiku-4-5</code> for background chatter, <code>claude-sonnet-5</code> for story beats. Never from the client.</div></div></div>
+        <div class="row"><div class="layer">Auth</div><div>
+          <div class="pick"><b>Real accounts day one</b> + the frictionless recovery-code save</div>
+          <div class="why">Supabase Auth or Lucia. Don’t bolt accounts on later like the original had to.</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENGINE vs WORLD PACK -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="idx">08 / WHY YOU CAN CHANGE ANYTHING</span>
+        <h2>One engine. The lore is just content on top.</h2>
+        <p>This is the important bit: characters, coins, story, even the whole theme are <em>swappable content</em>. The engine never changes when you add a new character or rewrite the lore — so nothing here locks you in.</p>
+      </div>
+      <div class="split">
+        <div class="col engine">
+          <h3>The Engine</h3>
+          <div class="sub">build once · never re-theme</div>
+          <ul>
+            <li>Market sim &amp; bonding curves</li>
+            <li>Wallets, trades, minting, PnL math</li>
+            <li>Clout rating &amp; decay</li>
+            <li>Feed, flex/larp verification, rate limits</li>
+            <li>Story state-machine runner</li>
+            <li>NPC service (the Claude proxy)</li>
+          </ul>
+        </div>
+        <div class="col world">
+          <h3>The World Pack</h3>
+          <div class="sub">pure content · swap anytime</div>
+          <ul>
+            <li>The characters &amp; their come-up stories</li>
+            <li>Starting bags, difficulty, vibes</li>
+            <li>Coin roster &amp; flavor</li>
+            <li>NPC names &amp; personalities</li>
+            <li>Story missions &amp; dialogue</li>
+            <li>Names, colors, art, copy</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEPLOYMENT -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="idx">09 / DEPLOYMENT — PICK YOUR TRACK</span>
+        <h2>Ship fast now, or build for scale from day one</h2>
+        <p>Both reach the same place. Start left for a playable build in weeks; move right when concurrency bites.</p>
+      </div>
+      <div class="tracks">
+        <div class="track reco">
+          <h3>Managed / BaaS <span class="pill">Start here</span></h3>
+          <p class="for">For: a real, cheat-resistant MVP, fast, solo.</p>
+          <dl>
+            <dt>Host</dt><dd>Vercel (client) + Fly.io / Railway (tick worker)</dd>
+            <dt>Data</dt><dd>Supabase (Postgres + Auth + Realtime) + Upstash Redis</dd>
+            <dt>AI</dt><dd>Claude API via a serverless route</dd>
+            <dt>Win</dt><dd>Auth, DB, realtime, storage in one dashboard</dd>
+          </dl>
+        </div>
+        <div class="track">
+          <h3>Self-hosted <span class="pill alt">Scale track</span></h3>
+          <p class="for">For: many concurrent players, strict authority.</p>
+          <dl>
+            <dt>Host</dt><dd>Fly.io / Render containers</dd>
+            <dt>Data</dt><dd>Managed Postgres + dedicated Redis</dd>
+            <dt>AI</dt><dd>Queued NPC service with caching</dd>
+            <dt>Win</dt><dd>Full control of the tick loop &amp; scaling</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section style="border-bottom:none;">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="idx">10 / BUILD ORDER</span>
+        <h2>Every step ends in something playable</h2>
+        <p>Don’t build the whole backend before the first trade feels good. Chase the fun early.</p>
+      </div>
+      <div class="road">
+        <div class="phase"><div class="num">1</div><div class="p-body">
+          <h3>The first trade</h3>
+          <div class="p-goal">GOAL → open it, buy a coin, feel the dopamine</div>
+          <p>Accounts, a server-side wallet, one coin on a bonding curve you can buy and sell. One character to start. Prove the loop is fun before anything else.</p></div></div>
+        <div class="phase"><div class="num">2</div><div class="p-body">
+          <h3>Create + a living market</h3>
+          <div class="p-goal">GOAL → mint your own meme, watch it move</div>
+          <p>Coin creation, the tick worker + live prices, mining/passive income. Now both playstyles exist: trade or create.</p></div></div>
+        <div class="phase"><div class="num">3</div><div class="p-body">
+          <h3>The feed + flex/larp</h3>
+          <div class="p-goal">GOAL → clout becomes real</div>
+          <p>The social feed, PnL posting with verification, the flex-vs-larp system, clout rating that moves markets and decays. This is your signature — get it right.</p></div></div>
+        <div class="phase"><div class="num">4</div><div class="p-body">
+          <h3>Characters + story + NPCs</h3>
+          <div class="p-goal">GOAL → it has a soul</div>
+          <p>The full character roster and come-up stories, the mission engine, and Claude-powered NPCs with memory. Ship the world pack.</p></div></div>
+        <div class="phase"><div class="num">5</div><div class="p-body">
+          <h3>Polish, mobile, launch</h3>
+          <div class="p-goal">GOAL → shareable and sticky</div>
+          <p>Fill the desktop apps, go responsive/touch, sound, onboarding, leaderboards, anti-cheat pass. Then tie in the token.</p></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span><b>TRENCH_OS</b> — concept &amp; build plan · draft v0.2</span>
+    <span>a Solana degen come-up sim · your lore, your engine</span>
+  </div>
+</footer>
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeToggle'),
+      icon=document.getElementById('themeIcon'), label=document.getElementById('themeLabel');
+  function sysDark(){return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;}
+  function current(){return root.getAttribute('data-theme')||(sysDark()?'dark':'light');}
+  function apply(t){root.setAttribute('data-theme',t);var d=t==='dark';icon.textContent=d?'☾':'☀';label.textContent=d?'Dark':'Light';
+    try{localStorage.setItem('trenchos.theme',t);}catch(e){}}
+  var saved;try{saved=localStorage.getItem('trenchos.theme');}catch(e){}
+  apply(saved||current());
+  btn.addEventListener('click',function(){apply(current()==='dark'?'light':'dark');});
+})();
+</script>
+</body>
+</html>
