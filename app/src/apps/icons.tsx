@@ -46,10 +46,14 @@ function markup(id: AppId | 'apps'): string {
       '<path d="M19 26.5c-2 1.5-4.5 3-4.5 6.5v2h6.5v-8.5z" fill="rgba(255,255,255,.45)"/>' +
       '<path d="M29 26.5c2 1.5 4.5 3 4.5 6.5v2h-6.5v-8.5z" fill="rgba(255,255,255,.45)"/>' +
       '<circle cx="24" cy="19" r="1.8" fill="#C22323"/>',
-    settings: G('se', '#7D8794', '#4A525D') + T('se') +
-      '<circle cx="24" cy="24" r="6.4" fill="none" stroke="#F2F5F9" stroke-width="3.4"/>' +
-      [0, 45, 90, 135, 180, 225, 270, 315].map((a) =>
-        `<rect x="22.35" y="9.2" width="3.3" height="6.2" rx="1.5" fill="#F2F5F9" transform="rotate(${a} 24 24)"/>`).join(''),
+    settings: G('se', '#E2E5EA', '#9BA3AE') + T('se') +
+      // iOS-style gear: 16 teeth around a heavy ring, radial spokes, hollow hub
+      Array.from({ length: 16 }, (_, i) =>
+        `<rect x="22.9" y="7.4" width="2.3" height="4.8" rx="1" fill="#59626E" transform="rotate(${i * 22.5} 24 24)"/>`).join('') +
+      '<circle cx="24" cy="24" r="12" fill="none" stroke="#59626E" stroke-width="4.6"/>' +
+      [0, 60, 120, 180, 240, 300].map((a) =>
+        `<rect x="23.1" y="14.6" width="1.9" height="7.6" fill="#59626E" transform="rotate(${a} 24 24)"/>`).join('') +
+      '<circle cx="24" cy="24" r="4.4" fill="none" stroke="#59626E" stroke-width="2.6"/>',
     wallpapers: G('wp', '#8F5AE8', '#5A28A8') + T('wp') +
       '<rect x="11" y="11" width="26" height="26" rx="4" fill="none" stroke="#fff" stroke-width="2" />' +
       '<circle cx="18" cy="18" r="2.2" fill="#fff" />' +
