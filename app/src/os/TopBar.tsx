@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useOS, wipeSave } from '../store/os';
 import { useClock } from '../hooks/useClock';
-import { fmtK, fmtBal } from '../lib/format';
+import { fmtK, fmtUsd } from '../lib/format';
 import { sfx, setMuted } from '../lib/sound';
 
 function getInitialTheme(): 'dark' | 'light' {
@@ -74,7 +74,7 @@ export function TopBar() {
           <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
           {fmtK(clout)}
         </span>
-        <span className="tbtn" style={{ pointerEvents: 'none', color: 'var(--gold)', fontWeight: 700 }}>${Math.round(balance)}</span>
+        <span className="tbtn" style={{ pointerEvents: 'none', color: 'var(--gold)', fontWeight: 700 }}>{fmtUsd(balance)}</span>
         <button className="tbtn" title="Log off & wipe save" onClick={logOff}>
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
         </button>

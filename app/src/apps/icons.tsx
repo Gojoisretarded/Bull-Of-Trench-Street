@@ -46,7 +46,11 @@ function markup(id: AppId | 'apps'): string {
       '<path d="M19 26.5c-2 1.5-4.5 3-4.5 6.5v2h6.5v-8.5z" fill="rgba(255,255,255,.45)"/>' +
       '<path d="M29 26.5c2 1.5 4.5 3 4.5 6.5v2h-6.5v-8.5z" fill="rgba(255,255,255,.45)"/>' +
       '<circle cx="24" cy="19" r="1.8" fill="#C22323"/>',
-    settings: G('se', '#8F5AE8', '#5A28A8') + T('se') +
+    settings: G('se', '#7D8794', '#4A525D') + T('se') +
+      '<circle cx="24" cy="24" r="6.4" fill="none" stroke="#F2F5F9" stroke-width="3.4"/>' +
+      [0, 45, 90, 135, 180, 225, 270, 315].map((a) =>
+        `<rect x="22.35" y="9.2" width="3.3" height="6.2" rx="1.5" fill="#F2F5F9" transform="rotate(${a} 24 24)"/>`).join(''),
+    wallpapers: G('wp', '#8F5AE8', '#5A28A8') + T('wp') +
       '<rect x="11" y="11" width="26" height="26" rx="4" fill="none" stroke="#fff" stroke-width="2" />' +
       '<circle cx="18" cy="18" r="2.2" fill="#fff" />' +
       '<polygon points="13,34 21,24 27,31 31,26 35,34" fill="#fff" />',

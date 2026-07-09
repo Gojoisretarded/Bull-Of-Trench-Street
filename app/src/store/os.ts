@@ -28,7 +28,8 @@ const DEFAULT: Record<AppId, { x: number | 'r'; y: number; w: number; h: number 
   chudmail: { x: 200, y: 130, w: 780, h: 520 },
   gamble: { x: 220, y: 140, w: 780, h: 520 },
   launchpad: { x: 260, y: 110, w: 380, h: 440 },
-  settings: { x: 280, y: 150, w: 420, h: 290 },
+  settings: { x: 280, y: 150, w: 460, h: 430 },
+  wallpapers: { x: 240, y: 120, w: 640, h: 460 },
 };
 
 /* ── anti-cheat salt & checksum ──────────────────────────────────────────

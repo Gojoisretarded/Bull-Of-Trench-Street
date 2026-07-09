@@ -7,7 +7,12 @@ export function fmtK(n: number): string {
   return String(Math.round(n));
 }
 
-// Currency display: fmtBal(5) -> "$5.00"
+// Currency display with thousand separators: fmtBal(375028.23) -> "$375,028.23"
 export function fmtBal(n: number): string {
-  return '$' + Math.abs(n).toFixed(2);
+  return '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// Whole-dollar display with separators: fmtUsd(375031) -> "$375,031"
+export function fmtUsd(n: number): string {
+  return '$' + Math.round(n).toLocaleString('en-US');
 }

@@ -2,47 +2,6 @@ import { useState, useCallback } from 'react';
 import { useOS, wipeSave } from '../store/os';
 import { sfx, setMuted } from '../lib/sound';
 
-interface WallpaperOption {
-  id: 'sonoma' | 'blueprint' | 'code' | 'helloworld';
-  name: string;
-  desc: string;
-  previewBg: string;
-  textColor: string;
-  badge?: string;
-}
-
-const OPTIONS: WallpaperOption[] = [
-  {
-    id: 'sonoma',
-    name: 'Sonoma Grid',
-    desc: 'Low-poly cyber bull with a neon mesh gradient background.',
-    previewBg: 'linear-gradient(135deg, #05070f 0%, #0b0e17 50%, #020306 100%)',
-    textColor: '#E7ECF3',
-    badge: 'DEFAULT',
-  },
-  {
-    id: 'blueprint',
-    name: 'Blueprint Tech',
-    desc: 'Deep navy technical blueprint grid with HUD lines.',
-    previewBg: '#05141E',
-    textColor: '#1a557a',
-  },
-  {
-    id: 'code',
-    name: 'Minimal Code',
-    desc: 'Minimalist dark equation layout: Laptop + Coffee = Code.',
-    previewBg: '#0B0D11',
-    textColor: '#788896',
-  },
-  {
-    id: 'helloworld',
-    name: 'Hello World',
-    desc: 'Classic hacker console theme with green monospace text.',
-    previewBg: '#000000',
-    textColor: '#34D399',
-  },
-];
-
 const CHAR_NAMES: Record<string, string> = {
   orphan: 'The Orphan', fumbler: 'The Fumbler', nepo: 'The Nepo', addict: 'The Addict',
 };
@@ -59,12 +18,16 @@ function SectionTitle({ children }: { children: string }) {
   );
 }
 
-function Row({ label, sub, right }: { label: string; sub?: string; right: React.ReactNode }) {
+function Row({ label, sub, right, onClick }: { label: string; sub?: string; right: React.ReactNode; onClick?: () => void }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-      background: 'var(--surface-2)', border: '1px solid var(--line-soft)', borderRadius: 10, padding: '10px 14px',
-    }}>
+    <div
+      onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+        background: 'var(--surface-2)', border: '1px solid var(--line-soft)', borderRadius: 10, padding: '10px 14px',
+        cursor: onClick ? 'pointer' : 'default',
+      }}
+    >
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{label}</div>
         {sub && <div style={{ fontSize: 10.5, color: 'var(--muted)', marginTop: 2 }}>{sub}</div>}
@@ -75,8 +38,6 @@ function Row({ label, sub, right }: { label: string; sub?: string; right: React.
 }
 
 export function Settings() {
-  const current = useOS((s) => s.wallpaper);
-  const setWallpaper = useOS((s) => s.setWallpaper);
   const toast = useOS((s) => s.toast);
   const username = useOS((s) => s.username);
   const handle = useOS((s) => s.handle);
@@ -86,6 +47,8 @@ export function Settings() {
   const onlineCount = useOS((s) => s.onlineCount);
   const muted = useOS((s) => s.muted);
   const toggleMuted = useOS((s) => s.toggleMuted);
+  const openApp = useOS((s) => s.openApp);
+  const wallpaper = useOS((s) => s.wallpaper);
 
   const [theme, setThemeState] = useState<'dark' | 'light'>(getInitialTheme);
   const toggleTheme = useCallback(() => {
@@ -95,12 +58,6 @@ export function Settings() {
     setThemeState(next);
     sfx.click();
   }, [theme]);
-
-  const select = (opt: WallpaperOption) => {
-    sfx.coin();
-    setWallpaper(opt.id);
-    toast(`Wallpaper changed to ${opt.name}`, 'good');
-  };
 
   const logOff = () => {
     if (!window.confirm('Log off and wipe this save? Your bag, clout and coins are gone forever.')) return;
@@ -159,84 +116,13 @@ export function Settings() {
           }
         />
 
-        <SectionTitle>WALLPAPER</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
-          {OPTIONS.map((opt) => {
-            const isSel = current === opt.id;
-            return (
-              <div
-                key={opt.id}
-                onClick={() => select(opt)}
-                style={{
-                  border: isSel ? '2px solid var(--gold)' : '1px solid var(--line)',
-                  borderRadius: '12px',
-                  background: 'var(--surface-2)',
-                  padding: '10px',
-                  cursor: 'pointer',
-                  transition: 'all 0.12s var(--ease)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px',
-                  boxShadow: isSel ? '0 4px 14px var(--glow)' : 'none',
-                }}
-              >
-                {/* Visual Thumbnail */}
-                <div
-                  style={{
-                    height: '96px',
-                    borderRadius: '8px',
-                    background: opt.previewBg,
-                    border: '1px solid rgba(255,255,255,0.06)',
-                    display: 'grid',
-                    placeItems: 'center',
-                    overflow: 'hidden',
-                    position: 'relative',
-                  }}
-                >
-                  {opt.id === 'sonoma' && (
-                    <div style={{ color: '#00f2ff', opacity: 0.35, fontSize: '18px', fontWeight: 'bold' }}>♉</div>
-                  )}
-                  {opt.id === 'blueprint' && (
-                    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                      <div style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #1a557a', opacity: 0.4, position: 'absolute', top: '10px', right: '10px' }} />
-                      <div style={{ width: '100%', height: '1px', background: '#1a557a', opacity: 0.3, position: 'absolute', top: '50%' }} />
-                    </div>
-                  )}
-                  {opt.id === 'code' && (
-                    <div style={{ color: opt.textColor, fontFamily: 'var(--mono)', fontSize: '11px' }}>💻+☕=&lt;/&gt;</div>
-                  )}
-                  {opt.id === 'helloworld' && (
-                    <div style={{ color: opt.textColor, fontFamily: 'var(--mono)', fontSize: '11px', fontWeight: 'bold' }}>Hello World.</div>
-                  )}
-                  {opt.badge && (
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: '6px',
-                        left: '6px',
-                        fontSize: '8px',
-                        fontWeight: 800,
-                        background: 'var(--gold)',
-                        color: 'var(--gold-ink)',
-                        padding: '2px 5px',
-                        borderRadius: '4px',
-                        letterSpacing: '0.05em',
-                      }}
-                    >
-                      {opt.badge}
-                    </span>
-                  )}
-                </div>
-
-                {/* Title & Info */}
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--ink)' }}>{opt.name}</div>
-                  <div style={{ fontSize: '10.5px', color: 'var(--muted)', marginTop: '3px', lineHeight: '1.3' }}>{opt.desc}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <SectionTitle>APPEARANCE</SectionTitle>
+        <Row
+          label="Wallpaper"
+          sub={`Current: ${wallpaper}`}
+          onClick={() => { sfx.click(); openApp('wallpapers'); }}
+          right={<span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)' }}>🖼 OPEN ›</span>}
+        />
       </div>
     </div>
   );
