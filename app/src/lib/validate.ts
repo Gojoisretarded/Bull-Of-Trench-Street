@@ -72,12 +72,15 @@ export function sanitizeCoin(v: unknown): Coin | null {
 }
 
 export function sanitizeCoins(v: unknown, maxCoins = 60): Coin[] | null {
-  if (!Array.isArray(v) || v.length > maxCoins) return null;
+  if (!Array.isArray(v)) return null;
   const out: Coin[] = [];
   const seen = new Set<string>();
-  for (const c of v) {
+  // Resilient by design: a single malformed coin is SKIPPED, never allowed
+  // to invalidate the whole world (one bad value once locked every player
+  // out of multiplayer login).
+  for (const c of v.slice(0, maxCoins)) {
     const coin = sanitizeCoin(c);
-    if (!coin || seen.has(coin.id)) return null;
+    if (!coin || seen.has(coin.id)) continue;
     seen.add(coin.id);
     out.push(coin);
   }

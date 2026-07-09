@@ -10,6 +10,16 @@ import { CHARACTERS, SHOP, SEED_COINS, RESERVED_USERNAMES, seedHist } from './ru
  */
 
 const HIST_LEN = 30;
+// Hard market bounds: keeps the economy sane and — critically — keeps every
+// value inside the range clients accept. Without a ceiling, compounding buy
+// impact pumped coins past 1e12, clients rejected the world, and nobody
+// could log in.
+const PRICE_FLOOR = 0.000001;
+const PRICE_CEIL = 1e9;
+const CHANGE_MIN = -98;
+const CHANGE_MAX = 99_999;
+const clampPrice = (p: number) => Math.max(PRICE_FLOOR, Math.min(PRICE_CEIL, p));
+const clampChange = (c: number) => Math.max(CHANGE_MIN, Math.min(CHANGE_MAX, c));
 
 export interface UserState {
   id: string;
@@ -76,13 +86,19 @@ export class Engine {
       let hist: number[] = [];
       try { hist = JSON.parse(r.hist); } catch { /* re-seed below */ }
       if (!Array.isArray(hist) || hist.length < 2) hist = seedHist(r.price, r.up === 1);
+      // Self-heal: clamp any out-of-bounds values persisted before the
+      // market bounds existed, so a poisoned database can't brick logins.
+      const price = clampPrice(Number.isFinite(r.price) ? r.price : PRICE_FLOOR);
       this.coins.set(r.id, {
-        id: r.id, name: r.name, ticker: r.ticker, price: r.price, change: r.change,
+        id: r.id, name: r.name, ticker: r.ticker, price,
+        change: clampChange(Number.isFinite(r.change) ? r.change : 0),
         up: r.up === 1, rug: r.rug === 1, mcap: r.mcap,
         badge: (r.badge === 'HOT' || r.badge === 'RUG') ? r.badge : null,
-        hist: hist.slice(-HIST_LEN), creatorName: null,
+        hist: hist.slice(-HIST_LEN).map((h) => clampPrice(Number.isFinite(h) ? h : price)),
+        creatorName: null,
       });
     }
+    this.persistCoins(); // write the healed values back immediately
   }
 
   private persistUser(u: UserState): void {
@@ -206,7 +222,7 @@ export class Engine {
       const last = c.hist[c.hist.length - 1] ?? c.price;
       const drift = c.rug ? -last * 0.03 : c.up ? last * 0.006 : -last * 0.006;
       const noise = (Math.random() - 0.48) * last * 0.09;
-      const nv = Math.max(last + drift + noise, 0.000001);
+      const nv = clampPrice(last + drift + noise);
       c.hist = [...c.hist.slice(-(HIST_LEN - 1)), nv];
       let change = c.change + ((nv - last) / Math.max(c.price, 1e-9)) * 100;
       if (c.rug) change = Math.min(change, -8);
@@ -264,10 +280,11 @@ export class Engine {
 
   private applyPrice(coin: CoinState, newPrice: number): void {
     const old = coin.price;
-    coin.change = Math.max(-98, coin.change + ((newPrice - old) / Math.max(old, 1e-9)) * 100);
-    coin.price = newPrice;
+    const price = clampPrice(newPrice);
+    coin.change = clampChange(coin.change + ((price - old) / Math.max(old, 1e-9)) * 100);
+    coin.price = price;
     coin.up = coin.change >= 0;
-    coin.hist = [...coin.hist.slice(-(HIST_LEN - 1)), newPrice];
+    coin.hist = [...coin.hist.slice(-(HIST_LEN - 1)), price];
   }
 
   launch(u: UserState, nameRaw: string, tickerRaw: string): Result {
