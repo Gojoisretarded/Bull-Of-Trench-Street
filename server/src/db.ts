@@ -96,6 +96,7 @@ export function openDb(file = CONFIG.dbFile) {
     updateUser: db.prepare(`UPDATE users SET balance=@balance, clout=@clout, followers=@followers,
                             blue_check=@blue_check, owned=@owned, holdings=@holdings, last_seen=@last_seen
                             WHERE id=@id`),
+    updateUserIdentity: db.prepare(`UPDATE users SET username=@username, token_hash=@token_hash WHERE id=@id`),
     insertCoin: db.prepare(`INSERT INTO coins (id, name, ticker, price, change, up, rug, mcap, badge, hist, creator_id, created_at)
                             VALUES (@id, @name, @ticker, @price, @change, @up, @rug, @mcap, @badge, @hist, @creator_id, @created_at)`),
     allCoins: db.prepare(`SELECT * FROM coins ORDER BY created_at ASC`),

@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useOS, wipeSave } from '../store/os';
 import { useClock } from '../hooks/useClock';
 import { fmtK, fmtUsd } from '../lib/format';
+import { netSend } from '../lib/netBus';
 import { sfx, setMuted } from '../lib/sound';
 
 function getInitialTheme(): 'dark' | 'light' {
@@ -23,8 +24,9 @@ export function TopBar() {
     // Power off = wipe the save (and its salt) and restart the sim.
     // A plain refresh keeps progress; this is the explicit reset.
     if (!window.confirm('Log off and wipe this save? Your bag, clout and coins are gone forever.')) return;
+    netSend({ t: 'unregister' }); // release the handle server-side (no-op offline)
     wipeSave();
-    location.reload();
+    setTimeout(() => location.reload(), 250);
   };
 
   const [theme, setThemeState] = useState<'dark' | 'light'>(getInitialTheme);

@@ -221,6 +221,14 @@ function handle(s: Session, msg: ClientMsg): void {
       if (!r.ok) send(s.ws, { t: 'error', code: r.code, msg: r.msg });
       return;
     }
+    case 'unregister': {
+      const r = engine.unregister(u);
+      if (!r.ok) { send(s.ws, { t: 'error', code: r.code, msg: r.msg }); return; }
+      for (const sess of sessions) if (sess.user?.id === u.id) sess.user = null;
+      send(s.ws, { t: 'notice', kind: 'info', msg: 'Handle released. See you in the trenches.' });
+      broadcast({ t: 'online', count: onlineCount() });
+      return;
+    }
   }
 }
 

@@ -23,6 +23,7 @@ export const ClientMsg = z.discriminatedUnion('t', [
   z.object({ t: z.literal('chirp'), kind: z.enum(['chirp', 'flex', 'larp']), body: z.string().max(280).optional() }),
   z.object({ t: z.literal('buy_item'), itemId: z.string().regex(/^[a-z0-9_-]{2,24}$/) }),
   z.object({ t: z.literal('gamble'), pick: z.enum(['heads', 'tails']), amountUsd: finite(0.01, 1_000_000) }),
+  z.object({ t: z.literal('unregister') }),
   z.object({ t: z.literal('ping') }),
 ]);
 export type ClientMsg = z.infer<typeof ClientMsg>;

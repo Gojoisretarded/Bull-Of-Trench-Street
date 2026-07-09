@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useOS, wipeSave } from '../store/os';
 import { sfx, setMuted } from '../lib/sound';
+import { netSend } from '../lib/netBus';
 
 const CHAR_NAMES: Record<string, string> = {
   orphan: 'The Orphan', fumbler: 'The Fumbler', nepo: 'The Nepo', addict: 'The Addict',
@@ -61,8 +62,9 @@ export function Settings() {
 
   const logOff = () => {
     if (!window.confirm('Log off and wipe this save? Your bag, clout and coins are gone forever.')) return;
+    netSend({ t: 'unregister' }); // release the handle server-side (no-op offline)
     wipeSave();
-    location.reload();
+    setTimeout(() => location.reload(), 250);
   };
 
   const connLabel = online

@@ -361,6 +361,25 @@ export class Engine {
     return OK;
   }
 
+  /**
+   * Voluntary log-off & wipe: frees the player's handle for re-use and
+   * invalidates the token. The row is renamed (not deleted) so foreign keys
+   * from coins/chirps stay intact. Only the authenticated owner can do this.
+   */
+  unregister(u: UserState): Result {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const ghost = `xdegen_${crypto.randomBytes(3).toString('hex')}`; // 13 chars, valid + unguessable
+      try {
+        this.store.stmts.updateUserIdentity.run({
+          id: u.id, username: ghost, token_hash: Engine.hashToken(crypto.randomBytes(32).toString('hex')),
+        });
+        this.users.delete(u.id);
+        return OK;
+      } catch { /* astronomically unlikely name collision — retry */ }
+    }
+    return err('internal', 'Could not release the handle. Try again.');
+  }
+
   /** Server-side coinflip — the house edge and the balance both live here. */
   gamble(u: UserState, pick: 'heads' | 'tails', amountUsd: number): Result {
     if (amountUsd < CONFIG.minTradeUsd || amountUsd > CONFIG.maxTradeUsd) return err('bad_amount', 'Invalid bet.');

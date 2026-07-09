@@ -256,7 +256,10 @@ function apply(raw: unknown): void {
       const code = safeStr(m.code, 32) ?? 'error';
       const msg = safeStr(m.msg, 160) ?? 'Server error.';
       if (code === 'bad_token') { dropToken(); return; }
-      if (code === 'name_taken' || code === 'bad_character') { pendingRegister = null; emitAuthError(msg); }
+      // Any error while a register is pending must un-stick the login screen
+      // immediately (name taken, rate limited, anything) — never leave the
+      // player staring at a faded screen.
+      if (pendingRegister) { pendingRegister = null; emitAuthError(msg); }
       useOS.getState().toast(msg, 'bad');
       return;
     }

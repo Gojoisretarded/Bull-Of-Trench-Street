@@ -12,6 +12,7 @@ export type NetAction =
   | { t: 'chirp'; kind: 'chirp' | 'flex' | 'larp'; body?: string }
   | { t: 'buy_item'; itemId: string }
   | { t: 'gamble'; pick: 'heads' | 'tails'; amountUsd: number }
+  | { t: 'unregister' }
   | { t: 'ping' };
 
 export interface NetChirp {
