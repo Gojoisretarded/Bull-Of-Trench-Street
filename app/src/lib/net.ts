@@ -1,7 +1,7 @@
 import { useOS, calcHash } from '../store/os';
 import { CHARACTERS, SHOP } from '../apps/registry';
 import { sanitizeCoins, sanitizeCoin, finiteNum, safeStr, isUsername } from './validate';
-import { setNetSender, pushNetChirp, seedNetChirps, emitAuthError, type NetAction, type NetChirp } from './netBus';
+import { setNetSender, pushNetChirp, seedNetChirps, emitAuthError, pushGambleResult, type NetAction, type NetChirp } from './netBus';
 import type { Coin } from '../os/types';
 
 /**
@@ -222,6 +222,16 @@ function apply(raw: unknown): void {
     }
 
     case 'wallet': applyWallet(m); return;
+
+    case 'gamble_result': {
+      const side = m.side === 'heads' || m.side === 'tails' ? m.side : null;
+      const delta = finiteNum(m.delta, -1e6, 1e6);
+      const balance = finiteNum(m.balance, 0, 1e15);
+      if (!side || delta === null || balance === null) return;
+      useOS.setState({ balance, balanceHash: calcHash(balance) });
+      pushGambleResult({ side, won: m.won === true, delta, balance });
+      return;
+    }
 
     case 'chirp': {
       const post = toNetChirp(m.post);

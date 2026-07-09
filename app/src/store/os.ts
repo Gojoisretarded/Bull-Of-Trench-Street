@@ -6,7 +6,7 @@ import { fmtK, fmtBal } from '../lib/format';
 import { sfx } from '../lib/sound';
 import { CHARACTERS, SHOP } from '../apps/registry';
 import { publish, subscribe, isLeader } from '../lib/sync';
-import { netSend } from '../lib/netBus';
+import { netSend, pushGambleResult } from '../lib/netBus';
 import {
   isUsername, sanitizeCoins, sanitizeTxns, sanitizeHoldings, sanitizeOwned,
   sanitizeWallpaper, resolveCharacter, finiteNum, safeStr, TICKER_RE,
@@ -153,6 +153,7 @@ interface OSState {
 
   tick: () => void;
   trade: (kind: 'buy' | 'sell', amount: number, coinId: string) => void;
+  gamble: (amount: number, pick: 'heads' | 'tails') => boolean;
   addClout: (clout: number, followers?: number) => void;
   buyItem: (item: ShopItem) => void;
   launchCoin: (name: string, ticker: string, desc: string) => boolean;
@@ -446,6 +447,31 @@ export const useOS = create<OSState>()(persist((set, get) => ({
       sfx.coin();
       s.toast(`Sold ${actualTokensToSell.toLocaleString(undefined, { maximumFractionDigits: 0 })} $${coin.ticker} for ${fmtBal(cashPayout)}`, 'sell');
     }
+  },
+
+  gamble: (amount, pick) => {
+    const s = get();
+    if (!Number.isFinite(amount) || amount < 0.01 || amount > 1e6) { sfx.err(); s.toast('Enter a valid bet amount.', 'bad'); return false; }
+    if (amount > s.balance) { sfx.err(); s.toast(`You only have ${fmtBal(s.balance)}. Down bad.`, 'bad'); return false; }
+    if (s.online) { netSend({ t: 'gamble', pick, amountUsd: amount }); return true; } // server flips the coin
+
+    // Offline: resolve locally — ALWAYS through calcHash so the anti-cheat
+    // checksum stays valid (writing balance without it triggers the rug screen).
+    const won = Math.random() < 0.48; // house edge
+    const side: 'heads' | 'tails' = won ? pick : (pick === 'heads' ? 'tails' : 'heads');
+    const delta = won ? amount : -amount;
+    const nextBal = Math.max(0, s.balance + delta);
+    const nextTxns = [mkTxn(`Coinflip ${won ? 'W' : 'L'}`, delta), ...s.txns].slice(0, 40);
+    set({ balance: nextBal, balanceHash: calcHash(nextBal), txns: nextTxns });
+    // keep other open tabs in sync (offline cross-tab mode)
+    const after = get();
+    publish({
+      type: 'WALLET_SYNC',
+      balance: after.balance, clout: after.clout, followers: after.followers,
+      blueCheck: after.blueCheck, ownedIds: Object.keys(after.owned), txns: after.txns,
+    });
+    pushGambleResult({ side, won, delta, balance: nextBal });
+    return true;
   },
 
   toast: (text, kind = 'info') => {

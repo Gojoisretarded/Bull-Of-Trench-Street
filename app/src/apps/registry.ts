@@ -12,7 +12,7 @@ export const APP_META: Record<AppId, { title: string }> = {
   gamble: { title: 'Gamble' },
   internet: { title: 'Internet' },
   launchpad: { title: 'Launchpad' },
-  settings: { title: 'Wallpapers' },
+  settings: { title: 'Settings' },
 };
 
 export const DOCK_APPS: AppId[] = ['degenfun', 'chirper', 'wallet', 'terminal', 'darkweb', 'settings'];

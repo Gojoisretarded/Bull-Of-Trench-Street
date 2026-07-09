@@ -215,6 +215,12 @@ function handle(s: Session, msg: ClientMsg): void {
       if (!r.ok) send(s.ws, { t: 'error', code: r.code, msg: r.msg });
       return;
     }
+    case 'gamble': {
+      if (!cooldownOk(s, 'gamble', 800)) { send(s.ws, { t: 'error', code: 'slow_down', msg: 'The coin is still in the air.' }); return; }
+      const r = engine.gamble(u, msg.pick, msg.amountUsd);
+      if (!r.ok) send(s.ws, { t: 'error', code: r.code, msg: r.msg });
+      return;
+    }
   }
 }
 

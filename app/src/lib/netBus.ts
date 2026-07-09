@@ -11,6 +11,7 @@ export type NetAction =
   | { t: 'launch'; name: string; ticker: string }
   | { t: 'chirp'; kind: 'chirp' | 'flex' | 'larp'; body?: string }
   | { t: 'buy_item'; itemId: string }
+  | { t: 'gamble'; pick: 'heads' | 'tails'; amountUsd: number }
   | { t: 'ping' };
 
 export interface NetChirp {
@@ -51,6 +52,22 @@ export function getNetChirps(): NetChirp[] { return [...chirpBuffer]; }
 export function onNetChirp(l: ChirpListener): () => void {
   chirpListeners.add(l);
   return () => chirpListeners.delete(l);
+}
+
+/* ── gamble results (Gamble app subscribes; store/net publish) ─────── */
+
+export interface GambleResult { side: 'heads' | 'tails'; won: boolean; delta: number; balance: number }
+
+type GambleListener = (r: GambleResult) => void;
+const gambleListeners = new Set<GambleListener>();
+
+export function pushGambleResult(r: GambleResult): void {
+  gambleListeners.forEach((l) => { try { l(r); } catch { /* ignore */ } });
+}
+
+export function onGambleResult(l: GambleListener): () => void {
+  gambleListeners.add(l);
+  return () => gambleListeners.delete(l);
 }
 
 /* ── auth error events (Login subscribes to un-stick its animation) ── */

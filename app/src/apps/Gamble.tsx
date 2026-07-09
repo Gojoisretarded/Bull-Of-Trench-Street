@@ -1,58 +1,71 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useOS } from '../store/os';
 import { fmtBal } from '../lib/format';
 import { sfx } from '../lib/sound';
+import { onGambleResult, type GambleResult } from '../lib/netBus';
 
+/**
+ * Coinflip. The flip itself is resolved by the store (offline: locally with
+ * a valid anti-cheat checksum; online: by the authoritative server) and the
+ * outcome arrives via the gamble-result bus. This component never touches
+ * the balance directly — doing so corrupts the integrity hash and triggers
+ * the cheater screen.
+ */
 export function Gamble() {
   const balance = useOS((s) => s.balance);
   const toast = useOS((s) => s.toast);
+  const gamble = useOS((s) => s.gamble);
   const [bet, setBet] = useState('1.00');
   const [pick, setPick] = useState<'heads' | 'tails'>('heads');
-  const [result, setResult] = useState<{ side: 'heads' | 'tails'; won: boolean; delta: number } | null>(null);
+  const [result, setResult] = useState<GambleResult | null>(null);
   const [streak, setStreak] = useState(0);
   const [bestWin, setBestWin] = useState(0);
   const [worstLoss, setWorstLoss] = useState(0);
   const [flipping, setFlipping] = useState(false);
   const [totalPlayed, setTotalPlayed] = useState(0);
   const [totalWon, setTotalWon] = useState(0);
+  const failsafe = useRef<number | null>(null);
+
+  // Receive flip outcomes (from the store offline, or the server online).
+  useEffect(() => {
+    return onGambleResult((r) => {
+      // small delay so the coin animation reads as a real flip
+      window.setTimeout(() => {
+        if (failsafe.current !== null) { clearTimeout(failsafe.current); failsafe.current = null; }
+        setResult(r);
+        setTotalPlayed((n) => n + 1);
+        if (r.won) {
+          setTotalWon((n) => n + 1);
+          setStreak((s) => (s > 0 ? s + 1 : 1));
+          setBestWin((b) => Math.max(b, Math.abs(r.delta)));
+          sfx.coin();
+          toast(`${r.side.toUpperCase()}! You won ${fmtBal(Math.abs(r.delta))} 🎉`, 'good');
+        } else {
+          setStreak((s) => (s < 0 ? s - 1 : -1));
+          setWorstLoss((b) => Math.max(b, Math.abs(r.delta)));
+          sfx.err();
+          toast(`${r.side.toUpperCase()}. Lost ${fmtBal(Math.abs(r.delta))}. Pain.`, 'bad');
+        }
+        setFlipping(false);
+      }, 550);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const flip = () => {
+    if (flipping) return;
     const amt = parseFloat(bet);
-    if (!amt || amt <= 0) { sfx.err(); toast('Enter a valid bet amount.', 'bad'); return; }
-    if (amt > balance) { sfx.err(); toast(`You only have ${fmtBal(balance)}. Down bad.`, 'bad'); return; }
-
+    if (!Number.isFinite(amt) || amt <= 0) { sfx.err(); toast('Enter a valid bet amount.', 'bad'); return; }
+    if (!gamble(amt, pick)) return; // store validated & rejected (toast already shown)
     setFlipping(true);
     sfx.tap();
-
-    setTimeout(() => {
-      // 48% win rate (house edge)
-      const won = Math.random() < 0.48;
-      const side: 'heads' | 'tails' = won ? pick : (pick === 'heads' ? 'tails' : 'heads');
-      const delta = won ? amt : -amt;
-
-      const s = useOS.getState();
-      const newBal = Math.max(0, s.balance + delta);
-      useOS.setState({
-        balance: newBal,
-        txns: [{ id: Date.now(), label: `Coinflip ${won ? 'W' : 'L'}`, delta, kind: won ? 'in' as const : 'out' as const, t: Date.now() }, ...s.txns].slice(0, 40),
-      });
-
-      setResult({ side, won, delta });
-      setTotalPlayed((n) => n + 1);
-      if (won) {
-        setTotalWon((n) => n + 1);
-        setStreak((s) => s > 0 ? s + 1 : 1);
-        setBestWin((b) => Math.max(b, amt));
-        sfx.coin();
-        toast(`${side.toUpperCase()}! You won ${fmtBal(amt)} 🎉`, 'good');
-      } else {
-        setStreak((s) => s < 0 ? s - 1 : -1);
-        setWorstLoss((b) => Math.max(b, amt));
-        sfx.err();
-        toast(`${side.toUpperCase()}. Lost ${fmtBal(amt)}. Pain.`, 'bad');
-      }
+    // Failsafe: if the server never answers (connection drop mid-flip),
+    // release the button instead of spinning forever.
+    failsafe.current = window.setTimeout(() => {
+      failsafe.current = null;
       setFlipping(false);
-    }, 600);
+      toast('No result from server — bet may not have gone through.', 'info');
+    }, 8000);
   };
 
   const streakText = streak > 0 ? `🔥 ${streak}W streak` : streak < 0 ? `💀 ${Math.abs(streak)}L streak` : '—';

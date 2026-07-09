@@ -361,6 +361,20 @@ export class Engine {
     return OK;
   }
 
+  /** Server-side coinflip — the house edge and the balance both live here. */
+  gamble(u: UserState, pick: 'heads' | 'tails', amountUsd: number): Result {
+    if (amountUsd < CONFIG.minTradeUsd || amountUsd > CONFIG.maxTradeUsd) return err('bad_amount', 'Invalid bet.');
+    if (amountUsd > u.balance) return err('poor', 'Insufficient funds. Cope.');
+    const won = Math.random() < 0.48;
+    const side: 'heads' | 'tails' = won ? pick : (pick === 'heads' ? 'tails' : 'heads');
+    const delta = won ? amountUsd : -amountUsd;
+    u.balance = round2(Math.max(0, u.balance + delta));
+    this.persistUser(u);
+    this.sendWallet(u);
+    this.toUser(u.id, { t: 'gamble_result', side, won, delta: round2(delta), balance: u.balance });
+    return OK;
+  }
+
   buyItem(u: UserState, itemId: string): Result {
     const item = SHOP.find((i) => i.id === itemId);
     if (!item || !item.enabled) return err('no_item', 'Item not available.');

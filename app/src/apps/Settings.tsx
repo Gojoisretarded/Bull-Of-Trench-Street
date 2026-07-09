@@ -1,5 +1,6 @@
-import { useOS } from '../store/os';
-import { sfx } from '../lib/sound';
+import { useState, useCallback } from 'react';
+import { useOS, wipeSave } from '../store/os';
+import { sfx, setMuted } from '../lib/sound';
 
 interface WallpaperOption {
   id: 'sonoma' | 'blueprint' | 'code' | 'helloworld';
@@ -42,10 +43,58 @@ const OPTIONS: WallpaperOption[] = [
   },
 ];
 
+const CHAR_NAMES: Record<string, string> = {
+  orphan: 'The Orphan', fumbler: 'The Fumbler', nepo: 'The Nepo', addict: 'The Addict',
+};
+
+function getInitialTheme(): 'dark' | 'light' {
+  try { return (localStorage.getItem('trenchos.theme') as 'dark' | 'light') || 'dark'; } catch { return 'dark'; }
+}
+
+function SectionTitle({ children }: { children: string }) {
+  return (
+    <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--mono)', letterSpacing: '0.08em', marginTop: 6 }}>
+      {children}
+    </div>
+  );
+}
+
+function Row({ label, sub, right }: { label: string; sub?: string; right: React.ReactNode }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+      background: 'var(--surface-2)', border: '1px solid var(--line-soft)', borderRadius: 10, padding: '10px 14px',
+    }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{label}</div>
+        {sub && <div style={{ fontSize: 10.5, color: 'var(--muted)', marginTop: 2 }}>{sub}</div>}
+      </div>
+      <div style={{ flexShrink: 0 }}>{right}</div>
+    </div>
+  );
+}
+
 export function Settings() {
   const current = useOS((s) => s.wallpaper);
   const setWallpaper = useOS((s) => s.setWallpaper);
   const toast = useOS((s) => s.toast);
+  const username = useOS((s) => s.username);
+  const handle = useOS((s) => s.handle);
+  const chosen = useOS((s) => s.chosen);
+  const online = useOS((s) => s.online);
+  const netReady = useOS((s) => s.netReady);
+  const onlineCount = useOS((s) => s.onlineCount);
+  const muted = useOS((s) => s.muted);
+  const toggleMuted = useOS((s) => s.toggleMuted);
+
+  const [theme, setThemeState] = useState<'dark' | 'light'>(getInitialTheme);
+  const toggleTheme = useCallback(() => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('trenchos.theme', next); } catch { /* storage blocked */ }
+    setThemeState(next);
+    sfx.click();
+  }, [theme]);
 
   const select = (opt: WallpaperOption) => {
     sfx.coin();
@@ -53,16 +102,64 @@ export function Settings() {
     toast(`Wallpaper changed to ${opt.name}`, 'good');
   };
 
+  const logOff = () => {
+    if (!window.confirm('Log off and wipe this save? Your bag, clout and coins are gone forever.')) return;
+    wipeSave();
+    location.reload();
+  };
+
+  const connLabel = online
+    ? `● Online — ${onlineCount} degen${onlineCount === 1 ? '' : 's'} in the trenches`
+    : netReady
+      ? '◐ Server reachable — not logged in'
+      : '○ Offline — solo trenches';
+  const connColor = online ? 'var(--green)' : netReady ? 'var(--gold)' : 'var(--muted)';
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--surface)' }}>
       <div className="appbar">
-        <strong style={{ color: 'var(--ink)' }}>Wallpapers</strong>
-        <span className="sub">// Appearance Settings</span>
+        <strong style={{ color: 'var(--ink)' }}>Settings</strong>
+        <span className="sub">// tune your trenches</span>
       </div>
-      <div style={{ flex: 1, overflow: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--mono)', letterSpacing: '0.05em' }}>
-          CHOOSE DESKTOP BACKGROUND
-        </div>
+      <div style={{ flex: 1, overflow: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+        <SectionTitle>ACCOUNT</SectionTitle>
+        <Row
+          label={username || 'Not logged in'}
+          sub={chosen ? `@${handle} · ${CHAR_NAMES[chosen.id] ?? chosen.name}` : 'Pick a degen at the login screen'}
+          right={
+            <button className="btn ghost" onClick={logOff} style={{ fontSize: 11, padding: '6px 12px', color: 'var(--red)' }}>
+              LOG OFF & WIPE
+            </button>
+          }
+        />
+        <Row
+          label="Connection"
+          sub="Multiplayer server status"
+          right={<span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: connColor }}>{connLabel}</span>}
+        />
+
+        <SectionTitle>SOUND &amp; THEME</SectionTitle>
+        <Row
+          label="Sound effects"
+          sub="Clicks, coins and pain"
+          right={
+            <button className="btn ghost" onClick={() => { toggleMuted(); setMuted(!muted); sfx.click(); }} style={{ fontSize: 11, padding: '6px 12px' }}>
+              {muted ? '🔇 MUTED' : '🔊 ON'}
+            </button>
+          }
+        />
+        <Row
+          label="Theme"
+          sub="Dark for the trenches, light for the brave"
+          right={
+            <button className="btn ghost" onClick={toggleTheme} style={{ fontSize: 11, padding: '6px 12px' }}>
+              {theme === 'dark' ? '🌙 DARK' : '☀️ LIGHT'}
+            </button>
+          }
+        />
+
+        <SectionTitle>WALLPAPER</SectionTitle>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
           {OPTIONS.map((opt) => {
             const isSel = current === opt.id;
@@ -96,12 +193,11 @@ export function Settings() {
                     position: 'relative',
                   }}
                 >
-                  {/* Subtle vector details in thumbnails */}
                   {opt.id === 'sonoma' && (
                     <div style={{ color: '#00f2ff', opacity: 0.35, fontSize: '18px', fontWeight: 'bold' }}>♉</div>
                   )}
                   {opt.id === 'blueprint' && (
-                    <div style={{ width: '100%', height: '100%', border: '1px stroke rgba(26,85,122,0.3)', position: 'relative' }}>
+                    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
                       <div style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #1a557a', opacity: 0.4, position: 'absolute', top: '10px', right: '10px' }} />
                       <div style={{ width: '100%', height: '1px', background: '#1a557a', opacity: 0.3, position: 'absolute', top: '50%' }} />
                     </div>
