@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useOS } from '../store/os';
 import { useClock } from '../hooks/useClock';
 import { CHARACTERS } from '../apps/registry';
@@ -28,8 +28,11 @@ export function Login() {
   const valid = USERNAME_RE.test(username);
   const ready = !!sel && valid;
 
+  // True while we're waiting for the server to answer a register request.
+  const awaitingServer = useRef(false);
+
   // If the server rejects the handle (e.g. taken), un-stick the exit animation.
-  useEffect(() => onAuthError(() => setLeaving(false)), []);
+  useEffect(() => onAuthError(() => { awaitingServer.current = false; setLeaving(false); }), []);
 
   const pick = (c: Character) => {
     sfx.click();
@@ -52,7 +55,21 @@ export function Login() {
     if (netReady) {
       // Multiplayer: the server creates the account; it flips us to the
       // desktop on auth_ok (or onAuthError resets this screen).
+      awaitingServer.current = true;
       netRegister(username, sel.id);
+      // Failsafe: never leave the player staring at a blank screen. If the
+      // server hasn't confirmed within 6s, enter solo mode instead.
+      const chosen = sel;
+      const chosenName = username;
+      window.setTimeout(() => {
+        if (!awaitingServer.current) return; // server answered (ok or error)
+        const s = useOS.getState();
+        if (s.online || s.phase === 'desktop') return;
+        awaitingServer.current = false;
+        s.toast('Server not responding — entering solo trenches.', 'info');
+        s.choose(chosen, chosenName);
+        s.setPhase('desktop');
+      }, 6000);
       return;
     }
     // Offline: original local single-player flow.
