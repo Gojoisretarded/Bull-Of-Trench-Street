@@ -351,10 +351,77 @@ export function DegenFun() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <style>{`
+        @keyframes dfMarquee {
+          0% { transform: translateX(0%); }
+          100% { transform: translateX(-100%); }
+        }
+        .df-marquee-container {
+          display: flex;
+          overflow: hidden;
+          user-select: none;
+          background: var(--surface-2);
+          border-bottom: 1px solid var(--line-soft);
+          font-family: var(--mono);
+          font-size: 10px;
+          height: 25px;
+          align-items: center;
+          position: relative;
+          white-space: nowrap;
+        }
+        .df-marquee-content {
+          display: flex;
+          flex-shrink: 0;
+          align-items: center;
+          justify-content: space-around;
+          min-width: 100%;
+          animation: dfMarquee 25s linear infinite;
+        }
+        .df-marquee-item {
+          display: inline-flex;
+          align-items: center;
+          margin: 0 12px;
+          gap: 4px;
+        }
+      `}</style>
       <div className="appbar">
         <strong style={{ color: 'var(--ink)' }}>Degen.Fun</strong>
         <span className="live"><span className="d" />LIVE MARKET</span>
       </div>
+
+      {/* Live Market Marquee */}
+      {coins.length > 0 && (
+        <div className="df-marquee-container">
+          <div className="df-marquee-content">
+            {coins.map((c) => {
+              const up = c.change >= 0;
+              return (
+                <span key={c.id} className="df-marquee-item">
+                  <span style={{ fontWeight: 'bold', color: 'var(--ink)' }}>${c.ticker}</span>
+                  <span style={{ color: 'var(--muted)' }}>${fmtPrice(c.price)}</span>
+                  <span style={{ color: up ? 'var(--green)' : 'var(--red)', fontWeight: 'bold' }}>
+                    {up ? '▲' : '▼'}{c.change.toFixed(1)}%
+                  </span>
+                </span>
+              );
+            })}
+          </div>
+          <div className="df-marquee-content" aria-hidden="true">
+            {coins.map((c) => {
+              const up = c.change >= 0;
+              return (
+                <span key={c.id + '_dup'} className="df-marquee-item">
+                  <span style={{ fontWeight: 'bold', color: 'var(--ink)' }}>${c.ticker}</span>
+                  <span style={{ color: 'var(--muted)' }}>${fmtPrice(c.price)}</span>
+                  <span style={{ color: up ? 'var(--green)' : 'var(--red)', fontWeight: 'bold' }}>
+                    {up ? '▲' : '▼'}{c.change.toFixed(1)}%
+                  </span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="dfx" style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         

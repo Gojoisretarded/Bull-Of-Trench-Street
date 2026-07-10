@@ -33,6 +33,7 @@ export interface UserState {
   blueCheck: boolean;
   owned: Set<string>;
   holdings: Map<string, number>;
+  isAdmin?: boolean;
 }
 
 export interface CoinState {
@@ -54,6 +55,33 @@ function cleanText(s: string, max: number): string {
   return s.replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
+const BOT_NAMES = ['AlphaDegen', 'SolWhale', 'BagHolder', 'JeetMaster', 'RugSurvivor', 'MoonBoy', 'GigaChad', 'MemeLord', 'Degen0x', 'PumpChaser'];
+const BOT_HANDLES = ['alphadegen', 'solwhale', 'bagholder', 'jeetmaster', 'rugsurvivor', 'moonboy', 'gigachad', 'memelord', 'degen0x', 'pumpchaser'];
+
+const BOT_BUY_CHIRPS = [
+  'just aped into ${ticker}, to the moon! 🚀',
+  'loading up more ${ticker}, this is a gem 💎',
+  'is ${ticker} the next 100x?',
+  'comfy holding my ${ticker} bag, dev is cooking 🍳',
+  'floor on ${ticker} looking solid, time to buy the dip!',
+  'looks like whales are starting to accumulate ${ticker} 👀'
+];
+
+const BOT_SELL_CHIRPS = [
+  'jeeted my ${ticker} bags, looks slow',
+  'who is dumping ${ticker}? solid floor broken 😭',
+  'took profits on ${ticker}, moving to next play',
+  'bag got too heavy on ${ticker}, selling for now',
+  'dev stopped posting on ${ticker}, looks like a fade 📉'
+];
+
+const BOT_RUG_CHIRPS = [
+  'DEV RUGGED ${ticker}! Liquidated my entire bag 💀',
+  'it\'s over for ${ticker}, dev just pulled the liquidity pool...',
+  'who could have predicted ${ticker} would be a rug 😭',
+  'dev sold everything on ${ticker}. down bad again, back to work.'
+];
+
 export class Engine {
   private coins = new Map<string, CoinState>();
   private users = new Map<string, UserState>();   // hot cache of active users
@@ -65,6 +93,30 @@ export class Engine {
     private toUser: (userId: string, msg: ServerMsg) => void,
   ) {
     this.loadCoins();
+    this.seedBots();
+  }
+
+  /**
+   * Seed a real user row per bot so bot chirps satisfy the chirps→users
+   * foreign key (previously every bot chirp threw a constraint error that was
+   * silently swallowed, so no bot chatter ever appeared). banned=1 keeps them
+   * unusable as login accounts; INSERT OR IGNORE makes this safe on restart.
+   */
+  private seedBots(): void {
+    const now = Date.now();
+    for (const handle of BOT_HANDLES) {
+      try {
+        this.store.stmts.insertBotUser.run({
+          id: 'bot_' + handle,
+          username: 'bot_' + handle,               // distinct from the display handle → no clash with real players
+          token_hash: 'bot_' + crypto.randomBytes(16).toString('hex'),
+          character_id: 'orphan',
+          created_at: now,
+        });
+      } catch (e) {
+        console.error('[bot seed error]', (e as Error).message);
+      }
+    }
   }
 
   /* ── loading & persistence ─────────────────────────────────────── */
@@ -217,11 +269,113 @@ export class Engine {
 
   tick(onlineUserIds: string[]): void {
     this.tickCount++;
+
+    // 1. Dynamic Creator Rug-Pulls
+    const coinList = [...this.coins.values()];
+    for (const c of coinList) {
+      // Seed coins (grump, cmr, dhd, hodl) are protected and don't rug.
+      if (!c.rug && !['grump', 'cmr', 'dhd', 'hodl'].includes(c.id)) {
+        // 0.1% chance per tick to rug once it has achieved some value
+        if (c.price > 0.005 && Math.random() < 0.001) {
+          c.rug = true;
+          c.badge = 'RUG';
+          try {
+            this.store.stmts.updateCoinRug.run({ id: c.id, rug: 1, badge: 'RUG' });
+          } catch (e) {
+            console.error('[rug persistence error]', (e as Error).message);
+          }
+
+          // Post complaint chirp from a bot
+          const botIdx = Math.floor(Math.random() * BOT_NAMES.length);
+          const botName = BOT_NAMES[botIdx]!;
+          const botHandle = BOT_HANDLES[botIdx]!;
+          const template = BOT_RUG_CHIRPS[Math.floor(Math.random() * BOT_RUG_CHIRPS.length)]!;
+          const chirpBody = template.replace(/\$\{ticker\}/g, `$${c.ticker}`);
+          const now = Date.now();
+          try {
+            const info = this.store.stmts.insertChirp.run({
+              user_id: 'bot_' + botHandle, name: botName, handle: botHandle, body: chirpBody,
+              verified: 0, larp: 0, likes: Math.floor(Math.random() * 40 + 10),
+              reposts: Math.floor(Math.random() * 10 + 2), followers: Math.floor(1000 + Math.random() * 8000), created_at: now,
+            });
+            this.store.stmts.pruneChirps.run(CONFIG.maxChirpsKept);
+            this.broadcast({
+              t: 'chirp',
+              post: {
+                id: Number(info.lastInsertRowid), name: botName, handle: botHandle, body: chirpBody,
+                verified: false, likes: 0, reposts: 0, followers: Math.floor(1000 + Math.random() * 8000), at: now,
+              }
+            });
+          } catch (e) {
+            console.error('[rug chirp error]', (e as Error).message);
+          }
+        }
+      }
+    }
+
+    // 2. Simulated Background Bot Trading
+    if (coinList.length > 0 && Math.random() < 0.15) {
+      const coin = coinList[Math.floor(Math.random() * coinList.length)]!;
+      let side: 'buy' | 'sell';
+      if (coin.rug) {
+        side = 'sell';
+      } else if (coin.price > 0.5) {
+        // Whale profit-taking
+        side = Math.random() < 0.65 ? 'sell' : 'buy';
+      } else if (coin.up) {
+        // Trend following
+        side = Math.random() < 0.60 ? 'buy' : 'sell';
+      } else {
+        side = Math.random() < 0.50 ? 'buy' : 'sell';
+      }
+
+      const botIdx = Math.floor(Math.random() * BOT_NAMES.length);
+      const botName = BOT_NAMES[botIdx]!;
+      const botHandle = BOT_HANDLES[botIdx]!;
+      const amountUsd = round2(50 + Math.random() * 3950);
+
+      if (side === 'buy') {
+        const impact = 1 + Math.min(0.25, amountUsd / 2000) * 0.4 + Math.random() * 0.01;
+        this.applyPrice(coin, coin.price * impact);
+      } else {
+        const impact = 1 - Math.min(0.25, amountUsd / 2000) * 0.35 - Math.random() * 0.01;
+        this.applyPrice(coin, Math.max(0.000001, coin.price * impact));
+      }
+
+      this.broadcast({ t: 'trade', coinId: coin.id, price: coin.price, change: coin.change, side, usd: amountUsd, by: botName });
+
+      // 15% chance to chirp about the trade
+      if (Math.random() < 0.15) {
+        const templates = side === 'buy' ? BOT_BUY_CHIRPS : BOT_SELL_CHIRPS;
+        const template = templates[Math.floor(Math.random() * templates.length)]!;
+        const chirpBody = template.replace(/\$\{ticker\}/g, `$${coin.ticker}`);
+        const now = Date.now();
+        try {
+          const info = this.store.stmts.insertChirp.run({
+            user_id: 'bot_' + botHandle, name: botName, handle: botHandle, body: chirpBody,
+            verified: Math.random() < 0.2 ? 1 : 0, larp: 0, likes: Math.floor(Math.random() * 20),
+            reposts: Math.floor(Math.random() * 5), followers: Math.floor(100 + Math.random() * 5000), created_at: now,
+          });
+          this.store.stmts.pruneChirps.run(CONFIG.maxChirpsKept);
+          this.broadcast({
+            t: 'chirp',
+            post: {
+              id: Number(info.lastInsertRowid), name: botName, handle: botHandle, body: chirpBody,
+              verified: Math.random() < 0.2, likes: 0, reposts: 0, followers: Math.floor(100 + Math.random() * 5000), at: now,
+            }
+          });
+        } catch (e) {
+          console.error('[bot chirp error]', (e as Error).message);
+        }
+      }
+    }
+
+    // 3. Random Walk Price Tick
     const prices: { id: string; price: number; change: number }[] = [];
     for (const c of this.coins.values()) {
       const last = c.hist[c.hist.length - 1] ?? c.price;
-      const drift = c.rug ? -last * 0.03 : c.up ? last * 0.006 : -last * 0.006;
-      const noise = (Math.random() - 0.48) * last * 0.09;
+      const drift = c.rug ? -last * 0.04 : (c.up ? last * 0.0015 : -last * 0.0015);
+      const noise = (Math.random() - 0.50) * last * 0.07;
       const nv = clampPrice(last + drift + noise);
       c.hist = [...c.hist.slice(-(HIST_LEN - 1)), nv];
       let change = c.change + ((nv - last) / Math.max(c.price, 1e-9)) * 100;
@@ -426,6 +580,33 @@ export class Engine {
     this.persistUser(u);
     this.sendWallet(u);
     this.toUser(u.id, { t: 'notice', kind: 'good', msg: 'Purchase complete.' });
+    return OK;
+  }
+
+  adminAuth(u: UserState, token: string): Result {
+    // Fail-safe: if no ADMIN_TOKEN is configured, admin is disabled entirely.
+    if (!CONFIG.adminToken) return err('bad_token', 'Admin is not enabled on this server.');
+    // Constant-time comparison so response timing can't leak the token.
+    const a = Buffer.from(token);
+    const b = Buffer.from(CONFIG.adminToken);
+    const okLen = a.length === b.length;
+    // Compare against a same-length buffer to keep timingSafeEqual from throwing.
+    const match = okLen && crypto.timingSafeEqual(a, b);
+    if (!match) return err('bad_token', 'Invalid admin credentials.');
+    u.isAdmin = true;
+    this.toUser(u.id, { t: 'notice', kind: 'good', msg: 'Admin override status activated.' });
+    return OK;
+  }
+
+  deleteCoin(u: UserState, ticker: string): Result {
+    if (!u.isAdmin) return err('forbidden', 'Admin credentials required. Run: sudo auth <token>');
+    const id = ticker.toLowerCase().replace(/^\$/, '');
+    const coin = this.coins.get(id);
+    if (!coin) return err('no_coin', 'Coin not found.');
+
+    this.coins.delete(id);
+    this.store.stmts.deleteCoin.run(id);
+    this.broadcast({ t: 'coin_deleted', coinId: id });
     return OK;
   }
 }

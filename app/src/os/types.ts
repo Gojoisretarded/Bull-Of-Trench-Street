@@ -1,6 +1,6 @@
 export type AppId =
   | 'degenfun' | 'chirper' | 'wallet' | 'terminal'
-  | 'darkweb' | 'files' | 'chudmail' | 'gamble' | 'internet' | 'launchpad' | 'settings' | 'wallpapers';
+  | 'darkweb' | 'files' | 'chudmail' | 'gamble' | 'internet' | 'launchpad' | 'settings' | 'wallpapers' | 'pumphub';
 
 export interface WinState {
   id: AppId;

@@ -8,6 +8,11 @@ function envInt(name: string, def: number): number {
 export const CONFIG = {
   port: envInt('PORT', 8787),
   dbFile: process.env.DB_FILE ?? 'trenchos.sqlite',
+  // Admin secret. NEVER hardcode a real value here — set ADMIN_TOKEN in the
+  // deployment environment (Railway → Variables). Empty default means "admin
+  // disabled" (fail-safe): with no token set, no one can elevate, rather than
+  // everyone sharing a guessable password that lives in the public repo.
+  adminToken: process.env.ADMIN_TOKEN ?? '',
 
   /** Origins allowed to open a WebSocket (browser Origin header allowlist). */
   allowedOrigins: (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5188,http://127.0.0.1:5188')

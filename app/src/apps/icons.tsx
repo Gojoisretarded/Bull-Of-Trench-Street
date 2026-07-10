@@ -58,6 +58,10 @@ function markup(id: AppId | 'apps'): string {
       '<rect x="11" y="11" width="26" height="26" rx="4" fill="none" stroke="#fff" stroke-width="2" />' +
       '<circle cx="18" cy="18" r="2.2" fill="#fff" />' +
       '<polygon points="13,34 21,24 27,31 31,26 35,34" fill="#fff" />',
+    pumphub: G('ph', '#141414', '#000000') + T('ph') +
+      '<text x="16" y="24.5" dominant-baseline="central" text-anchor="middle" font-family="Inter, system-ui, -apple-system, sans-serif" font-weight="900" font-size="19" fill="#ffffff" letter-spacing="-1">P</text>' +
+      '<rect x="24" y="14.5" width="16" height="19.5" rx="3.5" fill="#FF9900" />' +
+      '<text x="32" y="24" dominant-baseline="central" text-anchor="middle" font-family="Inter, system-ui, -apple-system, sans-serif" font-weight="900" font-size="19" fill="#000000" letter-spacing="-1">H</text>',
     apps: G('ap', '#2A3546', '#1A2230') + T('ap') +
       [16, 24, 32].map((y) => [16, 24, 32].map((x) => `<circle cx="${x}" cy="${y}" r="2.4" fill="#E7ECF3"/>`).join('')).join(''),
   };

@@ -13,6 +13,8 @@ export type NetAction =
   | { t: 'buy_item'; itemId: string }
   | { t: 'gamble'; pick: 'heads' | 'tails'; amountUsd: number }
   | { t: 'unregister' }
+  | { t: 'admin_auth'; token: string }
+  | { t: 'delete_coin'; ticker: string }
   | { t: 'ping' };
 
 export interface NetChirp {

@@ -22,6 +22,7 @@ interface Session {
   bucket: TokenBucket;
   alive: boolean;
   lastAction: Map<string, number>;
+  adminFails: number; // failed admin_auth attempts on this connection
 }
 
 const db = openDb();
@@ -117,6 +118,7 @@ wss.on('connection', (ws, req) => {
     bucket: new TokenBucket(CONFIG.msgRatePerSec, CONFIG.msgBurst),
     alive: true,
     lastAction: new Map(),
+    adminFails: 0,
   };
   sessions.add(session);
 
@@ -224,9 +226,25 @@ function handle(s: Session, msg: ClientMsg): void {
     case 'unregister': {
       const r = engine.unregister(u);
       if (!r.ok) { send(s.ws, { t: 'error', code: r.code, msg: r.msg }); return; }
+      // detach every session of this account (other open tabs included)
       for (const sess of sessions) if (sess.user?.id === u.id) sess.user = null;
       send(s.ws, { t: 'notice', kind: 'info', msg: 'Handle released. See you in the trenches.' });
       broadcast({ t: 'online', count: onlineCount() });
+      return;
+    }
+    case 'admin_auth': {
+      // Brute-force guard: throttle attempts and drop the connection after a
+      // handful of failures so the admin token can't be guessed at speed.
+      if (s.adminFails >= 5) { s.ws.close(1008, 'too many admin attempts'); return; }
+      if (!cooldownOk(s, 'admin', 1000)) { send(s.ws, { t: 'error', code: 'slow_down', msg: 'Slow down.' }); return; }
+      const r = engine.adminAuth(u, msg.token);
+      if (!r.ok) { s.adminFails++; send(s.ws, { t: 'error', code: r.code, msg: r.msg }); }
+      else { s.adminFails = 0; }
+      return;
+    }
+    case 'delete_coin': {
+      const r = engine.deleteCoin(u, msg.ticker);
+      if (!r.ok) send(s.ws, { t: 'error', code: r.code, msg: r.msg });
       return;
     }
   }

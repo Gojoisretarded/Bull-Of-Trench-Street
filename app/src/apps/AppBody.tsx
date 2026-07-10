@@ -13,6 +13,7 @@ import { Gamble } from './Gamble';
 import { Internet } from './Internet';
 import { Settings } from './Settings';
 import { Wallpapers } from './Wallpapers';
+import { PumpHub } from './PumpHub';
 
 function Flavor({ id }: { id: AppId }) {
   return (
@@ -37,6 +38,7 @@ export function AppBody({ id }: { id: AppId }) {
     case 'internet': return <Internet />;
     case 'settings': return <Settings />;
     case 'wallpapers': return <Wallpapers />;
+    case 'pumphub': return <PumpHub />;
     default: return <Flavor id={id} />;
   }
 }

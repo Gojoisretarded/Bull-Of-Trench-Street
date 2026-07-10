@@ -3,6 +3,7 @@ import { useOS } from '../store/os';
 import { WORLD } from '../config/world';
 import { fmtPrice } from '../lib/market';
 import { sfx } from '../lib/sound';
+import { netSend } from '../lib/netBus';
 
 interface Line { html: string; }
 
@@ -24,7 +25,13 @@ export function Terminal() {
   const print = (html: string) => setLines((l) => [...l, { html }]);
 
   const run = (raw: string) => {
-    print(`<span class="p">degen@trench</span><span class="dim">:~$</span> ${raw.replace(/</g, '&lt;')}`);
+    const parts = raw.split(/\s+/);
+    if (parts[0] === 'sudo' && parts[1] === 'auth') {
+      const masked = parts[2] ? '*'.repeat(parts[2].length) : '';
+      print(`<span class="p">degen@trench</span><span class="dim">:~$</span> sudo auth ${masked}`);
+    } else {
+      print(`<span class="p">degen@trench</span><span class="dim">:~$</span> ${raw.replace(/</g, '&lt;')}`);
+    }
     if (!raw) return;
     sfx.tap();
     const [cmd, ...args] = raw.split(/\s+/);
@@ -64,8 +71,47 @@ export function Terminal() {
         break;
       case 'clear': setLines([]); break;
       case 'exit': closeApp('terminal'); break;
-      case 'sudo': print('<span class="r">you have no power here.</span>'); sfx.err(); break;
-      case 'rm': print('<span class="r">nice try. grandma would be disappointed.</span>'); sfx.err(); break;
+      case 'sudo': {
+        const sub = args[0];
+        const val = args[1];
+        if (sub === 'auth' && val) {
+          if (useOS.getState().online) {
+            netSend({ t: 'admin_auth', token: val });
+            print(`<span class="dim">Authenticating admin override...</span>`);
+          } else {
+            print(`<span class="g">Offline mode: admin is always active.</span>`);
+          }
+        } else if ((sub === 'delete' || sub === 'rm') && val) {
+          if (useOS.getState().online) {
+            netSend({ t: 'delete_coin', ticker: val });
+            print(`<span class="dim">Requesting admin deletion of $${val.toUpperCase()}...</span>`);
+          } else {
+            // Local/offline delete fallback
+            const id = val.toLowerCase().replace(/^\$/, '');
+            const s = useOS.getState();
+            const coin = s.coins.find(c => c.id === id || c.ticker.toLowerCase() === id);
+            if (coin) {
+              useOS.setState({ coins: s.coins.filter(c => c.id !== coin.id) });
+              print(`<span class="g">Deleted $${coin.ticker} (offline mode).</span>`);
+              sfx.coin();
+            } else {
+              print(`<span class="r">Coin $${val.toUpperCase()} not found.</span>`);
+              sfx.err();
+            }
+          }
+        } else {
+          print('<span class="r">you have no power here.</span>');
+          sfx.err();
+        }
+        break;
+      }
+      case 'rm': {
+        const val = args[0];
+        if (!val) { print('<span class="r">usage: rm &lt;ticker&gt;</span>'); sfx.err(); break; }
+        print('<span class="r">permission denied. try: sudo rm &lt;ticker&gt;</span>');
+        sfx.err();
+        break;
+      }
       default: print(`<span class="r">command not found:</span> ${cmd.replace(/</g, '&lt;')} <span class="dim">(try help)</span>`);
     }
   };

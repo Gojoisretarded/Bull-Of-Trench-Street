@@ -208,6 +208,14 @@ function apply(raw: unknown): void {
       return;
     }
 
+    case 'coin_deleted': {
+      if (typeof m.coinId !== 'string') return;
+      const s = useOS.getState();
+      useOS.setState({ coins: s.coins.filter((c) => c.id !== m.coinId) });
+      s.toast(`$${m.coinId.toUpperCase()} was deleted by admin.`, 'info');
+      return;
+    }
+
     case 'trade': {
       const price = finiteNum(m.price, 0, 1e12);
       const change = finiteNum(m.change, -100, 1e6);

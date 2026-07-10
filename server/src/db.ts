@@ -91,6 +91,11 @@ export function openDb(file = CONFIG.dbFile) {
   const stmts = {
     insertUser: db.prepare(`INSERT INTO users (id, username, token_hash, character_id, balance, created_at, last_seen)
                             VALUES (@id, @username, @token_hash, @character_id, @balance, @created_at, @last_seen)`),
+    // Bot accounts: real rows so bot chirps satisfy the chirps→users foreign
+    // key. banned=1 so they can never be logged into. INSERT OR IGNORE makes
+    // seeding idempotent across restarts.
+    insertBotUser: db.prepare(`INSERT OR IGNORE INTO users (id, username, token_hash, character_id, balance, created_at, last_seen, banned)
+                               VALUES (@id, @username, @token_hash, @character_id, 0, @created_at, @created_at, 1)`),
     userByTokenHash: db.prepare(`SELECT * FROM users WHERE token_hash = ?`),
     userByUsername: db.prepare(`SELECT * FROM users WHERE username = ?`),
     updateUser: db.prepare(`UPDATE users SET balance=@balance, clout=@clout, followers=@followers,
@@ -101,6 +106,8 @@ export function openDb(file = CONFIG.dbFile) {
                             VALUES (@id, @name, @ticker, @price, @change, @up, @rug, @mcap, @badge, @hist, @creator_id, @created_at)`),
     allCoins: db.prepare(`SELECT * FROM coins ORDER BY created_at ASC`),
     updateCoin: db.prepare(`UPDATE coins SET price=@price, change=@change, up=@up, hist=@hist WHERE id=@id`),
+    deleteCoin: db.prepare(`DELETE FROM coins WHERE id = ?`),
+    updateCoinRug: db.prepare(`UPDATE coins SET rug=@rug, badge=@badge WHERE id=@id`),
     insertChirp: db.prepare(`INSERT INTO chirps (user_id, name, handle, body, verified, larp, likes, reposts, followers, created_at)
                              VALUES (@user_id, @name, @handle, @body, @verified, @larp, @likes, @reposts, @followers, @created_at)`),
     recentChirps: db.prepare(`SELECT * FROM chirps ORDER BY created_at DESC, id DESC LIMIT ?`),

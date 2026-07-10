@@ -24,6 +24,8 @@ export const ClientMsg = z.discriminatedUnion('t', [
   z.object({ t: z.literal('buy_item'), itemId: z.string().regex(/^[a-z0-9_-]{2,24}$/) }),
   z.object({ t: z.literal('gamble'), pick: z.enum(['heads', 'tails']), amountUsd: finite(0.01, 1_000_000) }),
   z.object({ t: z.literal('unregister') }),
+  z.object({ t: z.literal('admin_auth'), token: z.string().min(1).max(128) }),
+  z.object({ t: z.literal('delete_coin'), ticker: z.string().min(2).max(8) }),
   z.object({ t: z.literal('ping') }),
 ]);
 export type ClientMsg = z.infer<typeof ClientMsg>;
@@ -56,6 +58,7 @@ export type ServerMsg =
   | { t: 'error'; code: string; msg: string }
   | { t: 'tick'; prices: { id: string; price: number; change: number }[] }
   | { t: 'coin_launched'; coin: WireCoin; by: string }
+  | { t: 'coin_deleted'; coinId: string }
   | { t: 'trade'; coinId: string; price: number; change: number; side: 'buy' | 'sell'; usd: number; by: string }
   | { t: 'chirp'; post: WireChirp }
   | { t: 'wallet'; balance: number; clout: number; followers: number; blueCheck: boolean; owned: string[]; holdings: Record<string, number> }

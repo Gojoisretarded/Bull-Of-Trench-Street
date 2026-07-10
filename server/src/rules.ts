@@ -42,6 +42,9 @@ export const SEED_COINS: SeedCoin[] = [
 export const RESERVED_USERNAMES = new Set([
   'admin', 'administrator', 'mod', 'moderator', 'system', 'server', 'root',
   'support', 'official', 'staff', 'anthropic', 'trenchos', 'bots',
+  // bot display handles — reserved so real players can't impersonate them
+  'alphadegen', 'solwhale', 'bagholder', 'jeetmaster', 'rugsurvivor',
+  'moonboy', 'gigachad', 'memelord', 'degen0x', 'pumpchaser',
 ]);
 
 export function seedHist(price: number, up: boolean): number[] {

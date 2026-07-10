@@ -39,19 +39,23 @@ export function tickCoins(coins: Coin[]): Coin[] {
 }
 
 export function fmtPrice(p: number): string {
-  return p < 0.01 ? p.toFixed(5) : p.toFixed(4);
+  const decimals = p < 0.01 ? 5 : 4;
+  return p.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
 export function fmtMcap(price: number): string {
   const mcap = price * 75_000_000;
   if (mcap >= 1_000_000_000) {
-    return `$${(mcap / 1_000_000_000).toFixed(1)}B`;
+    const val = mcap / 1_000_000_000;
+    return `$${val.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}B`;
   }
   if (mcap >= 1_000_000) {
-    return `$${(mcap / 1_000_000).toFixed(1)}M`;
+    const val = mcap / 1_000_000;
+    return `$${val.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M`;
   }
   if (mcap >= 1_000) {
-    return `$${(mcap / 1_000).toFixed(0)}K`;
+    const val = mcap / 1_000;
+    return `$${val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}K`;
   }
-  return `$${mcap.toFixed(0)}`;
+  return `$${mcap.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }

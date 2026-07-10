@@ -30,6 +30,7 @@ const DEFAULT: Record<AppId, { x: number | 'r'; y: number; w: number; h: number 
   launchpad: { x: 260, y: 110, w: 380, h: 440 },
   settings: { x: 280, y: 150, w: 460, h: 430 },
   wallpapers: { x: 240, y: 120, w: 640, h: 460 },
+  pumphub: { x: 100, y: 80, w: 780, h: 520 },
 };
 
 /* ── anti-cheat salt & checksum ──────────────────────────────────────────
@@ -82,6 +83,7 @@ export function wipeSave(): void {
   try { useOS.persist.clearStorage(); } catch { /* ignore */ }
   try { localStorage.removeItem(SALT_KEY); } catch { /* ignore */ }
   try { localStorage.removeItem('trenchos_token'); } catch { /* ignore */ }
+  try { localStorage.removeItem('trenchos_files'); } catch { /* ignore */ }
   try {
     useOS.setState({
       chosen: null,

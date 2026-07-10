@@ -14,9 +14,10 @@ export const APP_META: Record<AppId, { title: string }> = {
   launchpad: { title: 'Launchpad' },
   settings: { title: 'Settings' },
   wallpapers: { title: 'Wallpapers' },
+  pumphub: { title: 'PumpHub' },
 };
 
-export const DOCK_APPS: AppId[] = ['degenfun', 'chirper', 'wallet', 'terminal', 'darkweb', 'settings'];
+export const DOCK_APPS: AppId[] = ['degenfun', 'chirper', 'wallet', 'terminal', 'darkweb', 'pumphub', 'settings'];
 export const ALL_APPS: AppId[] = Object.keys(APP_META) as AppId[];
 
 export const FLAVOR: Partial<Record<AppId, string>> = {

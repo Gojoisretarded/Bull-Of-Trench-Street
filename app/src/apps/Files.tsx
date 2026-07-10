@@ -4,7 +4,7 @@ import { sfx } from '../lib/sound';
 
 interface FakeFile { id: string; name: string; ext: string; size: string; icon: string; preview: string; }
 
-const FILES: FakeFile[] = [
+const DEFAULT_FILES: FakeFile[] = [
   { id: 'sonoma', name: 'wallpaper_sonoma_grid', ext: 'svg', size: '12.4 KB', icon: '🎨', preview: '[DESKTOP WALLPAPER]\n\nType: Dynamic Vector (SVG)\nTheme: Sonoma Mesh Gradient & Low-Poly Cyber Bull Mascot\n\nClick the button below to set this as your desktop wallpaper.' },
   { id: 'blueprint', name: 'wallpaper_blueprint_trench', ext: 'svg', size: '8.2 KB', icon: '🎨', preview: '[DESKTOP WALLPAPER]\n\nType: Technical Grid (SVG)\nTheme: Blueprints & HUD Schematic lines\n\nClick the button below to set this as your desktop wallpaper.' },
   { id: 'code', name: 'wallpaper_coding_equation', ext: 'svg', size: '4.8 KB', icon: '🎨', preview: '[DESKTOP WALLPAPER]\n\nType: Developer Minimalist (SVG)\nTheme: Laptop + Coffee = Code\n\nClick the button below to set this as your desktop wallpaper.' },
@@ -22,11 +22,80 @@ const FILES: FakeFile[] = [
 export function Files() {
   const toast = useOS((s) => s.toast);
   const setWallpaper = useOS((s) => s.setWallpaper);
+  
+  // Load files list from localStorage or fall back to default
+  const [filesList, setFilesList] = useState<FakeFile[]>(() => {
+    try {
+      const saved = localStorage.getItem('trenchos_files');
+      if (saved) return JSON.parse(saved);
+    } catch (e) { /* ignore */ }
+    return DEFAULT_FILES;
+  });
+
   const [sel, setSel] = useState<FakeFile | null>(null);
   const [view, setView] = useState<'grid' | 'list'>('grid');
+  
+  // Editing state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState('');
 
-  const openFile = (f: FakeFile) => { sfx.click(); setSel(f); };
-  const del = () => { sfx.err(); toast('File cannot be deleted. It knows too much.', 'bad'); };
+  const isEditable = (ext: string) => ['txt', 'json', 'md', 'svg'].includes(ext);
+
+  const openFile = (f: FakeFile) => {
+    sfx.click();
+    setSel(f);
+    setIsEditing(false);
+  };
+
+  const startEdit = () => {
+    if (!sel) return;
+    sfx.click();
+    setEditContent(sel.preview);
+    setIsEditing(true);
+  };
+
+  const saveEdit = () => {
+    if (!sel) return;
+    sfx.coin();
+    
+    // Calculate new file size description dynamically
+    const charCount = editContent.length;
+    const sizeStr = charCount < 1024 
+      ? `${charCount} B` 
+      : `${(charCount / 1024).toFixed(1)} KB`;
+
+    const updatedFile: FakeFile = {
+      ...sel,
+      preview: editContent,
+      size: sizeStr
+    };
+
+    const nextList = filesList.map((f) => f.id === sel.id ? updatedFile : f);
+    setFilesList(nextList);
+    try {
+      localStorage.setItem('trenchos_files', JSON.stringify(nextList));
+    } catch (e) { /* ignore */ }
+
+    setSel(updatedFile);
+    setIsEditing(false);
+    toast(`Saved changes to ${sel.name}.${sel.ext}`, 'good');
+  };
+
+  const del = () => {
+    if (!sel) return;
+    sfx.click();
+    if (window.confirm(`Are you sure you want to delete ${sel.name}.${sel.ext}?`)) {
+      const nextList = filesList.filter((f) => f.id !== sel.id);
+      setFilesList(nextList);
+      try {
+        localStorage.setItem('trenchos_files', JSON.stringify(nextList));
+      } catch (e) { /* ignore */ }
+      
+      toast(`Deleted ${sel.name}.${sel.ext}`, 'good');
+      setSel(null);
+    }
+  };
+
   const applyWallpaper = (f: FakeFile) => {
     sfx.coin();
     setWallpaper(f.id as any);
@@ -45,15 +114,21 @@ export function Files() {
       </div>
       <div className="fm-body">
         {!sel ? (
-          <div className={view === 'grid' ? 'fm-grid' : 'fm-list'}>
-            {FILES.map((f) => (
-              <div key={f.id} className="fm-file" onClick={() => openFile(f)}>
-                <div className="fm-icon">{f.icon}</div>
-                <div className="fm-fname">{f.name}<span className="fm-ext">.{f.ext}</span></div>
-                {view === 'list' && <div className="fm-size">{f.size}</div>}
-              </div>
-            ))}
-          </div>
+          filesList.length === 0 ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)', fontSize: '12px' }}>
+              No files found in Documents.
+            </div>
+          ) : (
+            <div className={view === 'grid' ? 'fm-grid' : 'fm-list'}>
+              {filesList.map((f) => (
+                <div key={f.id} className="fm-file" onClick={() => openFile(f)}>
+                  <div className="fm-icon">{f.icon}</div>
+                  <div className="fm-fname">{f.name}<span className="fm-ext">.{f.ext}</span></div>
+                  {view === 'list' && <div className="fm-size">{f.size}</div>}
+                </div>
+              ))}
+            </div>
+          )
         ) : (
           <div className="fm-preview">
             <div className="fm-preview-head">
@@ -63,14 +138,49 @@ export function Files() {
                 <div className="fm-preview-size">{sel.size}</div>
               </div>
             </div>
-            <pre className="fm-preview-body">{sel.preview}</pre>
+            {isEditing ? (
+              <textarea
+                className="fm-preview-body"
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                style={{
+                  width: '100%',
+                  height: '180px',
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--line-soft)',
+                  borderRadius: '8px',
+                  color: 'var(--ink)',
+                  fontFamily: 'var(--mono)',
+                  fontSize: '11.5px',
+                  padding: '12px',
+                  outline: 'none',
+                  resize: 'none',
+                  boxSizing: 'border-box',
+                  lineHeight: '1.4'
+                }}
+              />
+            ) : (
+              <pre className="fm-preview-body">{sel.preview}</pre>
+            )}
             <div className="fm-preview-acts">
-              {sel.ext === 'svg' && (
-                <button className="btn gold" onClick={() => applyWallpaper(sel)}>🖼 Set as Background</button>
+              {isEditing ? (
+                <>
+                  <button className="btn gold" onClick={saveEdit}>💾 Save Changes</button>
+                  <button className="btn ghost" onClick={() => setIsEditing(false)}>✕ Cancel</button>
+                </>
+              ) : (
+                <>
+                  {sel.ext === 'svg' && (
+                    <button className="btn gold" onClick={() => applyWallpaper(sel)}>🖼 Set as Background</button>
+                  )}
+                  {isEditable(sel.ext) && (
+                    <button className="btn gold" onClick={startEdit}>📝 Edit File</button>
+                  )}
+                  <button className="btn ghost" onClick={del}>🗑 Delete</button>
+                  <button className="btn ghost" onClick={() => { sfx.tap(); toast('Shared to Chirper. Embarrassing.', 'info'); }}>↗ Share</button>
+                  <button className="btn ghost" onClick={() => setSel(null)}>← Back</button>
+                </>
               )}
-              <button className="btn ghost" onClick={del}>🗑 Delete</button>
-              <button className="btn ghost" onClick={() => { sfx.tap(); toast('Shared to Chirper. Embarrassing.', 'info'); }}>↗ Share</button>
-              <button className="btn ghost" onClick={() => setSel(null)}>← Back</button>
             </div>
           </div>
         )}
