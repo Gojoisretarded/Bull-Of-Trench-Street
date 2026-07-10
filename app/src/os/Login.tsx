@@ -37,9 +37,14 @@ export function Login() {
   const pick = (c: Character) => {
     sfx.click();
     setSel(c);
-    // Pre-populate with the character's default handle unless the player
-    // already typed their own.
-    if (!touched || !username) setUsername(DEFAULT_HANDLES[c.id] ?? 'trench_degen');
+    // Pre-populate with a UNIQUE suggested handle. The suffix matters: these
+    // are real multiplayer accounts, so a static default would be claimed by
+    // the first player ever and rejected as "taken" for everyone after.
+    if (!touched || !username) {
+      const base = DEFAULT_HANDLES[c.id] ?? 'trench_degen';
+      const suffix = '_' + String(Math.floor(100 + Math.random() * 900));
+      setUsername((base + suffix).slice(0, 16));
+    }
   };
 
   const onType = (v: string) => {
