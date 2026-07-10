@@ -3,7 +3,7 @@ import { useOS } from '../store/os';
 import { WORLD } from '../config/world';
 import { fmtPrice } from '../lib/market';
 import { sfx } from '../lib/sound';
-import { netSend } from '../lib/netBus';
+import { netSend, onServerFeedback } from '../lib/netBus';
 
 interface Line { html: string; }
 
@@ -24,10 +24,23 @@ export function Terminal() {
 
   const print = (html: string) => setLines((l) => [...l, { html }]);
 
+  // Show the server's admin/delete result inline in the Terminal. We only
+  // print while a sudo command is in flight so ordinary toasts elsewhere
+  // don't leak into the terminal.
+  const awaitingAdmin = useRef(false);
+  useEffect(() => onServerFeedback((f) => {
+    if (!awaitingAdmin.current) return;
+    awaitingAdmin.current = false;
+    const cls = f.kind === 'good' ? 'g' : f.kind === 'bad' ? 'r' : 'dim';
+    print(`<span class="${cls}">${f.text.replace(/</g, '&lt;')}</span>`);
+  }), []);
+
   const run = (raw: string) => {
     const parts = raw.split(/\s+/);
     if (parts[0] === 'sudo' && parts[1] === 'auth') {
-      const masked = parts[2] ? '*'.repeat(parts[2].length) : '';
+      // Everything after "sudo auth " is the token — including spaces.
+      const tok = raw.replace(/^\s*sudo\s+auth\s+/i, '');
+      const masked = '*'.repeat(tok.length);
       print(`<span class="p">degen@trench</span><span class="dim">:~$</span> sudo auth ${masked}`);
     } else {
       print(`<span class="p">degen@trench</span><span class="dim">:~$</span> ${raw.replace(/</g, '&lt;')}`);
@@ -76,7 +89,11 @@ export function Terminal() {
         const val = args[1];
         if (sub === 'auth' && val) {
           if (useOS.getState().online) {
-            netSend({ t: 'admin_auth', token: val });
+            // full token (allows spaces), everything after "sudo auth "
+            const token = raw.replace(/^\s*sudo\s+auth\s+/i, '').trim();
+            netSend({ t: 'admin_auth', token });
+            awaitingAdmin.current = true;
+            window.setTimeout(() => { awaitingAdmin.current = false; }, 6000);
             print(`<span class="dim">Authenticating admin override...</span>`);
           } else {
             print(`<span class="g">Offline mode: admin is always active.</span>`);
@@ -84,6 +101,8 @@ export function Terminal() {
         } else if ((sub === 'delete' || sub === 'rm') && val) {
           if (useOS.getState().online) {
             netSend({ t: 'delete_coin', ticker: val });
+            awaitingAdmin.current = true;
+            window.setTimeout(() => { awaitingAdmin.current = false; }, 6000);
             print(`<span class="dim">Requesting admin deletion of $${val.toUpperCase()}...</span>`);
           } else {
             // Local/offline delete fallback

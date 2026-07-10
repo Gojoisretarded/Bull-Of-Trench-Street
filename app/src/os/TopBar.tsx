@@ -18,6 +18,7 @@ export function TopBar() {
   const handle = useOS((s) => s.handle);
   const online = useOS((s) => s.online);
   const onlineCount = useOS((s) => s.onlineCount);
+  const admin = useOS((s) => s.admin);
   const { toggleOverview, setGrid, toggleMuted } = useOS.getState();
 
   const logOff = () => {
@@ -64,6 +65,13 @@ export function TopBar() {
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
           )}
         </button>
+        {admin && (
+          <span className="tbtn" title="Admin override active — you can sudo rm coins"
+            style={{ pointerEvents: 'none', fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 10.5,
+              color: 'var(--gold)', border: '1px solid var(--gold)', borderRadius: 5, padding: '1px 6px', letterSpacing: '.08em' }}>
+            ⚡ ADMIN
+          </span>
+        )}
         {online && (
           <span className="tbtn" title={`${onlineCount} degens online`} style={{ pointerEvents: 'none', color: 'var(--green)', fontFamily: 'var(--mono)' }}>
             ● {onlineCount}

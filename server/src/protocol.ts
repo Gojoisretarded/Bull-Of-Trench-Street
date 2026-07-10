@@ -63,6 +63,7 @@ export type ServerMsg =
   | { t: 'chirp'; post: WireChirp }
   | { t: 'wallet'; balance: number; clout: number; followers: number; blueCheck: boolean; owned: string[]; holdings: Record<string, number> }
   | { t: 'gamble_result'; side: 'heads' | 'tails'; won: boolean; delta: number; balance: number }
+  | { t: 'admin_ok' }
   | { t: 'notice'; kind: 'good' | 'bad' | 'info'; msg: string }
   | { t: 'online'; count: number }
   | { t: 'pong' };

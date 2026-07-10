@@ -585,16 +585,16 @@ export class Engine {
 
   adminAuth(u: UserState, token: string): Result {
     // Fail-safe: if no ADMIN_TOKEN is configured, admin is disabled entirely.
-    if (!CONFIG.adminToken) return err('bad_token', 'Admin is not enabled on this server.');
+    if (!CONFIG.adminToken) return err('admin_denied', 'Admin is not enabled on this server.');
     // Constant-time comparison so response timing can't leak the token.
     const a = Buffer.from(token);
     const b = Buffer.from(CONFIG.adminToken);
     const okLen = a.length === b.length;
     // Compare against a same-length buffer to keep timingSafeEqual from throwing.
     const match = okLen && crypto.timingSafeEqual(a, b);
-    if (!match) return err('bad_token', 'Invalid admin credentials.');
+    if (!match) return err('admin_denied', 'Invalid admin credentials.');
     u.isAdmin = true;
-    this.toUser(u.id, { t: 'notice', kind: 'good', msg: 'Admin override status activated.' });
+    this.toUser(u.id, { t: 'admin_ok' });
     return OK;
   }
 

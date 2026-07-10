@@ -140,6 +140,7 @@ interface OSState {
   netReady: boolean;    // socket open — server reachable
   online: boolean;      // authenticated — server owns shared state
   onlineCount: number;  // degens currently connected
+  admin: boolean;       // this session has elevated admin rights
 
   setPhase: (p: OSState['phase']) => void;
   choose: (c: Character, username: string) => void;
@@ -254,6 +255,7 @@ export const useOS = create<OSState>()(persist((set, get) => ({
   netReady: false,
   online: false,
   onlineCount: 0,
+  admin: false,
 
   setPhase: (p) => set({ phase: p }),
 

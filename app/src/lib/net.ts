@@ -1,7 +1,7 @@
 import { useOS, calcHash } from '../store/os';
 import { CHARACTERS, SHOP } from '../apps/registry';
 import { sanitizeCoins, sanitizeCoin, finiteNum, safeStr, isUsername } from './validate';
-import { setNetSender, pushNetChirp, seedNetChirps, emitAuthError, pushGambleResult, type NetAction, type NetChirp } from './netBus';
+import { setNetSender, pushNetChirp, seedNetChirps, emitAuthError, pushGambleResult, pushServerFeedback, type NetAction, type NetChirp } from './netBus';
 import type { Coin } from '../os/types';
 
 /**
@@ -79,7 +79,7 @@ function connect(): void {
     ws = null;
     setNetSender(null);
     const wasOnline = useOS.getState().online;
-    useOS.setState({ netReady: false, online: false, onlineCount: 0 });
+    useOS.setState({ netReady: false, online: false, onlineCount: 0, admin: false });
     if (wasOnline) useOS.getState().toast('Server connection lost — back to solo trenches.', 'info');
     scheduleReconnect();
   };
@@ -167,7 +167,7 @@ function apply(raw: unknown): void {
       seedNetChirps(chirps);
       const online = finiteNum(m.online, 0, 1e6) ?? 1;
       useOS.setState({
-        online: true, onlineCount: online,
+        online: true, onlineCount: online, admin: false,
         chosen, username, handle: username.toLowerCase(),
         coins, cheater: false, phase: 'desktop',
       });
@@ -213,6 +213,14 @@ function apply(raw: unknown): void {
       const s = useOS.getState();
       useOS.setState({ coins: s.coins.filter((c) => c.id !== m.coinId) });
       s.toast(`$${m.coinId.toUpperCase()} was deleted by admin.`, 'info');
+      pushServerFeedback({ kind: 'good', text: `Deleted $${m.coinId.toUpperCase()} — gone for everyone.` });
+      return;
+    }
+
+    case 'admin_ok': {
+      useOS.setState({ admin: true });
+      useOS.getState().toast('Admin override activated.', 'good');
+      pushServerFeedback({ kind: 'good', text: 'Admin override activated. You have god mode.' });
       return;
     }
 
@@ -264,6 +272,10 @@ function apply(raw: unknown): void {
       const code = safeStr(m.code, 32) ?? 'error';
       const msg = safeStr(m.msg, 160) ?? 'Server error.';
       if (code === 'bad_token') { dropToken(); return; }
+      // Admin failures get their own code so they never wipe the session token
+      // and always surface in the Terminal as an inline result.
+      if (code === 'admin_denied') { pushServerFeedback({ kind: 'bad', text: msg }); useOS.getState().toast(msg, 'bad'); return; }
+      if (code === 'forbidden' || code === 'no_coin') { pushServerFeedback({ kind: 'bad', text: msg }); }
       // Any error while a register is pending must un-stick the login screen
       // immediately (name taken, rate limited, anything) — never leave the
       // player staring at a faded screen.

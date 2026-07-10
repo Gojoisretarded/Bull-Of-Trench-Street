@@ -86,3 +86,18 @@ export function onAuthError(l: AuthErrorListener): () => void {
   authErrListeners.add(l);
   return () => authErrListeners.delete(l);
 }
+
+/* ── terminal feedback (Terminal shows server results inline) ───────── */
+
+export interface ServerFeedback { kind: 'good' | 'bad' | 'info'; text: string }
+type ServerFeedbackListener = (f: ServerFeedback) => void;
+const feedbackListeners = new Set<ServerFeedbackListener>();
+
+export function pushServerFeedback(f: ServerFeedback): void {
+  feedbackListeners.forEach((l) => { try { l(f); } catch { /* ignore */ } });
+}
+
+export function onServerFeedback(l: ServerFeedbackListener): () => void {
+  feedbackListeners.add(l);
+  return () => feedbackListeners.delete(l);
+}
