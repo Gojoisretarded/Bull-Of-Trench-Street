@@ -2,6 +2,8 @@ import type { AppId } from '../os/types';
 import { FLAVOR } from './registry';
 import { AppIcon } from './icons';
 import { DegenFun } from './DegenFun';
+import { DegenFunMobile } from './DegenFunMobile';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { Chirper } from './Chirper';
 import { Wallet } from './Wallet';
 import { Terminal } from './Terminal';
@@ -25,8 +27,9 @@ function Flavor({ id }: { id: AppId }) {
 }
 
 export function AppBody({ id }: { id: AppId }) {
+  const isMobile = useIsMobile();
   switch (id) {
-    case 'degenfun': return <DegenFun />;
+    case 'degenfun': return isMobile ? <DegenFunMobile /> : <DegenFun />;
     case 'chirper': return <Chirper />;
     case 'wallet': return <Wallet />;
     case 'terminal': return <Terminal />;

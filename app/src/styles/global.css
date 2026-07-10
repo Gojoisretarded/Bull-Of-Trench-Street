@@ -1,3 +1,5 @@
+@import "./mobile.css";
+
 :root{
     /* fine matte blue — Bull of Trench Street. --gold var name kept = accent (now blue) */
     --ground:#0A0F16; --surface:#121924; --surface-2:#19222F; --surface-3:#22303F;
@@ -14,6 +16,12 @@
     --bar-border:rgba(50,38,65,.6);
     --dock-bg:#17121E;
     --dock-border:rgba(50,38,65,.7);
+
+    /* Safe Area Insets for notched phones */
+    --safe-t: env(safe-area-inset-top, 0px);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-l: env(safe-area-inset-left, 0px);
+    --safe-r: env(safe-area-inset-right, 0px);
   }
 
   /* ================= WIDE LIGHT MODE ================= */
@@ -728,4 +736,5 @@ html[data-theme="light"] .ga .ic {
   font-size: 11.5px;
   min-width: 50px;
 }
+
 

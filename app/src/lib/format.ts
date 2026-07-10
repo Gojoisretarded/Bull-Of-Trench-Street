@@ -16,3 +16,8 @@ export function fmtBal(n: number): string {
 export function fmtUsd(n: number): string {
   return '$' + Math.round(n).toLocaleString('en-US');
 }
+
+// Compact currency for tight spaces (status bar): 999 -> "$999", 7_500_464 -> "$7.5M", 1.2e9 -> "$1.2B"
+export function fmtUsdCompact(n: number): string {
+  return '$' + fmtK(n);
+}

@@ -1,0 +1,821 @@
+/* Mobile Shell Layout */
+.mobile-shell-root {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--ground);
+  overflow: hidden;
+}
+
+.mobile-screen-container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+
+.mobile-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: calc(var(--safe-t) + 10px) 16px 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  background: transparent;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.mobile-status-bar .time {
+  flex-shrink: 0;
+}
+
+.mobile-status-bar .r {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.mobile-status-bar .bal {
+  color: var(--gold);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mobile-status-bar .adm {
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: .06em;
+}
+
+.mobile-status-bar .on {
+  color: var(--green);
+}
+
+.mobile-status-bar .bal {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* Main Content Area */
+.mobile-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Home Screen Launcher */
+.mobile-home {
+  flex: 1;
+  padding: 8px 16px 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.36s cubic-bezier(0.16, 1, 0.3, 1), filter 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: scale(1);
+  opacity: 1;
+  filter: blur(0);
+}
+
+.mobile-screen-container.app-open .mobile-home {
+  transform: scale(0.95);
+  opacity: 0.45;
+  filter: blur(12px);
+  pointer-events: none;
+}
+
+/* Blur the wallpaper itself on app launch — this always renders,
+   unlike backdrop-filter which is unreliable under an ancestor filter. */
+#wall {
+  transition: filter 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mobile-shell-root:has(.mobile-screen-container.app-open) #wall,
+.mobile-shell-root:has(.apps-drawer-overlay) #wall,
+.mobile-shell-root:has(.mobile-switcher) #wall {
+  filter: blur(18px) brightness(0.6);
+  transform: scale(1.08);
+}
+
+/* When the Apps drawer is open, blur the home grid + greeting behind it
+   directly (backdrop-filter is unreliable), leaving the drawer itself sharp. */
+.mobile-home:has(.apps-drawer-overlay) .grid,
+.mobile-home:has(.apps-drawer-overlay) .hi {
+  filter: blur(14px);
+  opacity: 0.4;
+  pointer-events: none;
+  transition: filter 0.3s ease, opacity 0.3s ease;
+}
+
+.mobile-home .hi {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+  letter-spacing: .08em;
+  margin: 6px 2px 16px;
+  line-height: 1.4;
+}
+
+.mobile-home .grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  justify-items: center;
+  gap: 16px 12px;
+}
+
+.ga-app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  /* Constrain the hit area to roughly the icon + label so taps in the
+     surrounding whitespace don't open the app. */
+  width: 64px;
+  padding: 2px 0;
+  transition: transform 0.15s var(--ease);
+}
+
+.ga-app:active {
+  transform: scale(0.92);
+}
+
+.ga-app .ic {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.ga-app .ic svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.ga-app .app-title {
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.2;
+  font-family: var(--sans);
+  font-weight: 500;
+  max-width: 64px;
+  overflow-wrap: break-word;
+}
+
+.homebar {
+  height: 5px;
+  width: 120px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 99px;
+  margin: auto auto calc(var(--safe-b) + 12px);
+  flex-shrink: 0;
+}
+
+/* App View Host */
+.mobile-app-view {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: rgba(10, 15, 22, 0.6) !important;
+  backdrop-filter: blur(28px) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(1.4) !important;
+  overflow: hidden;
+  animation: mobileAppLaunch 0.38s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+  transform-origin: center bottom;
+}
+
+@keyframes mobileAppLaunch {
+  from {
+    transform: scale(0.92) translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* When the floating dock is present, end the app view above it so the dock
+   never covers app content (lists, buy sheets, feeds, etc.). */
+.mobile-screen-container:has(.mobile-tab-bar) .mobile-app-view {
+  bottom: calc(var(--safe-b) + 92px);
+}
+
+.apphead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--surface-2);
+  flex-shrink: 0;
+}
+
+.apphead .bk {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--surface-3);
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  font-size: 18px;
+  border: 0;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.apphead b {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.mobile-app-body {
+  flex: 1 !important;
+  overflow: hidden !important;
+  position: relative;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+}
+
+.mobile-app-body > * {
+  flex: 1 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Bottom Tab Navigation (iOS Style Dock) */
+.mobile-tab-bar {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(var(--safe-b) + 12px);
+  background: rgba(18, 25, 36, 0.82) !important;
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 24px !important;
+  padding: 10px 8px !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: 8px !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  z-index: 100;
+}
+
+.mobile-tab-bar button {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  color: var(--muted) !important;
+  cursor: pointer !important;
+  gap: 6px !important;
+  transition: transform 0.15s var(--ease), color 0.15s !important;
+}
+
+.mobile-tab-bar button:active {
+  transform: scale(0.92) !important;
+}
+
+.mobile-tab-bar button.act {
+  color: var(--ink) !important;
+}
+
+.mobile-tab-bar button .ic {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 11px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  overflow: hidden !important;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.mobile-tab-bar button .ic.app-ic {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.mobile-tab-bar button.act .ic {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 12px rgba(240, 193, 144, 0.25);
+}
+
+.mobile-tab-bar button.act .ic.app-ic {
+  filter: drop-shadow(0 0 8px rgba(79, 143, 230, 0.4)) !important;
+}
+
+.mobile-tab-bar button svg {
+  width: 22px !important;
+  height: 22px !important;
+  display: block;
+}
+
+.mobile-tab-bar button .ic.app-ic svg {
+  width: 44px !important;
+  height: 44px !important;
+}
+
+.mobile-tab-bar button .app-title {
+  font-size: 9px !important;
+  font-family: var(--sans) !important;
+  font-weight: 600 !important;
+  text-align: center;
+  line-height: 1.1;
+}
+
+/* General Adaptations for touch targets & forms on small screens */
+@media (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important; /* Prevents auto zoom in iOS */
+  }
+
+  button, a, input[type="submit"], input[type="button"] {
+    min-height: 44px; /* Touch target size */
+  }
+
+  /* Specific app styling adjustments */
+  
+  /* HIDE desktop appbars inside window views */
+  .mobile-app-body .appbar {
+    display: none !important;
+  }
+
+  /* Dark Web Adaptation */
+  .dw-body {
+    flex-direction: column !important;
+  }
+
+  .dw-rail {
+    width: 100% !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    padding: 8px 12px !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--line-soft) !important;
+    gap: 8px !important;
+    white-space: nowrap !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    flex: 0 0 auto !important;
+  }
+
+  .dw-cat {
+    padding: 6px 12px !important;
+    border-radius: 99px !important;
+    font-size: 11px !important;
+    border: 1px solid var(--line-soft) !important;
+    background: var(--surface-2) !important;
+    margin: 0 !important;
+    flex: 0 0 auto;
+    min-height: auto !important; /* override touch target inside horizontal scroll */
+  }
+
+  .dw-cat.on {
+    background: var(--gold) !important;
+    color: var(--gold-ink) !important;
+    border-color: var(--gold) !important;
+  }
+
+  .dw-note {
+    display: none !important;
+  }
+
+  .dw-list {
+    padding: 10px 8px !important;
+    gap: 8px !important;
+  }
+
+  .dwrow {
+    padding: 10px !important;
+    gap: 10px !important;
+  }
+
+  .dw-thumb {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 20px !important;
+  }
+
+  .dw-title {
+    font-size: 13px !important;
+  }
+
+  .dw-desc {
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+
+  .dw-meta {
+    font-size: 9.5px !important;
+    gap: 6px !important;
+    margin-top: 5px !important;
+  }
+
+  .dw-buy {
+    align-self: center !important;
+    gap: 4px !important;
+  }
+
+  .dw-buy .btn {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    min-height: auto !important;
+  }
+
+  /* ChudMail Adaptation */
+  .mail-body {
+    flex-direction: column !important;
+  }
+
+  .mail-list {
+    display: block !important;
+    width: 100% !important;
+    flex: 1 !important;
+  }
+
+  .mail-body:has(.mail-read) .mail-list {
+    display: none !important;
+  }
+
+  .mail-read {
+    width: 100% !important;
+    padding: 14px !important;
+    flex: 1 !important;
+  }
+
+  .mail-read-body {
+    font-size: 12.5px !important;
+    line-height: 1.6 !important;
+  }
+
+  .mail-read-acts {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .mail-read-acts button {
+    flex: 1;
+    min-width: 80px;
+  }
+
+  /* Wallet Adaptation */
+  .wlt {
+    padding: 12px !important;
+    gap: 10px !important;
+  }
+
+  .wlt-card {
+    padding: 16px 14px !important;
+  }
+
+  .wlt-bal {
+    font-size: 32px !important;
+  }
+
+  .wlt-actions {
+    gap: 8px !important;
+  }
+
+  .wlt-act {
+    padding: 10px 4px !important;
+  }
+
+  .wlt-stats {
+    gap: 8px !important;
+  }
+
+  .wlt-stat {
+    padding: 10px 12px !important;
+  }
+
+  .wlt-stat .v {
+    font-size: 16px !important;
+  }
+
+  /* Terminal adaptation to viewport height */
+  .term {
+    font-size: 11.5px !important;
+    line-height: 1.5 !important;
+    padding: 8px 10px !important;
+  }
+
+  /* Apps Drawer (Full-screen overlay mirroring desktop) */
+  .apps-drawer-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 15, 22, 0.6) !important;
+    backdrop-filter: blur(28px) saturate(1.5) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(1.5) !important;
+    z-index: 150;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .apps-drawer {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    padding: calc(var(--safe-t) + 20px) 16px calc(96px + var(--safe-b));
+    background: none;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    animation: appsDrawerZoomIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  @keyframes appsDrawerZoomIn {
+    from {
+      transform: scale(0.92);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .apps-drawer-header {
+    width: 100%;
+  }
+
+  .apps-drawer-search-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .apps-drawer-search-row input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    padding: 12px 18px;
+    color: var(--ink);
+    font-size: 15px;
+    outline: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    transition: border-color 0.15s;
+  }
+
+  .apps-drawer-search-row input:focus {
+    border-color: var(--gold);
+  }
+
+  .apps-drawer-close {
+    background: none;
+    border: none;
+    color: var(--gold);
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 4px;
+  }
+
+  .apps-drawer-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    justify-items: center;
+    gap: 16px 12px;
+    overflow-y: auto;
+    padding-bottom: 20px;
+  }
+
+  /* Mobile App Switcher / Overview */
+  .mobile-switcher {
+    position: absolute;
+    inset: 0;
+    background: rgba(11, 15, 22, 0.85);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    animation: fadeIn 0.2s var(--ease);
+  }
+
+  .mobile-switcher-title {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--gold);
+    margin-bottom: 24px;
+    letter-spacing: 0.1em;
+  }
+
+  .mobile-switcher-close {
+    position: absolute;
+    top: calc(var(--safe-t) + 16px);
+    right: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(245, 86, 110, 0.12);
+    border: 1px solid rgba(245, 86, 110, 0.5);
+    color: #F5566E;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 99px;
+    cursor: pointer;
+    z-index: 210;
+    min-height: auto;
+    transition: background 0.15s, color 0.15s, transform 0.15s;
+  }
+
+  .mobile-switcher-close .x {
+    font-size: 11px;
+    line-height: 1;
+  }
+
+  .mobile-switcher-close:hover {
+    background: #F5566E;
+    border-color: #F5566E;
+    color: #fff;
+  }
+
+  .mobile-switcher-close:active {
+    transform: scale(0.94);
+  }
+
+  .mobile-switcher-cards {
+    display: flex;
+    gap: 20px;
+    padding: 20px 40px;
+    overflow-x: auto;
+    width: 100%;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-switcher-card {
+    flex: 0 0 240px;
+    height: 380px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    scroll-snap-align: center;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    transition: transform 0.2s;
+  }
+
+  .mobile-switcher-card:active {
+    transform: scale(0.97);
+  }
+
+  .mobile-switcher-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .mobile-switcher-card-header .icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .mobile-switcher-card-header .title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .mobile-switcher-card-header .close-btn {
+    margin-left: auto;
+    width: 24px !important;
+    height: 24px !important;
+    min-height: 0 !important; /* cancel the global 44px touch-target rule that stretched it into an ellipse */
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 50% !important;
+    background: rgba(245, 86, 110, 0.15) !important;
+    border: 1px solid rgba(245, 86, 110, 0.5) !important;
+    color: #F5566E !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    font-weight: bold !important;
+    display: grid !important;
+    place-items: center !important;
+    cursor: pointer !important;
+    transition: all 0.15s !important;
+    padding: 0 !important;
+    flex: 0 0 auto !important;
+  }
+
+  .mobile-switcher-card-header .close-btn:hover {
+    background: #F5566E !important;
+    border-color: #F5566E !important;
+    color: #FFFFFF !important;
+  }
+
+  .mobile-switcher-card-preview {
+    flex: 1;
+    background: var(--ground);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--faint);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  /* Apps Drawer Grid staggered animations */
+  .apps-drawer-grid .ga-app.animate-in {
+    animation: gaIn 0.3s var(--ease) both;
+  }
+
+  /* Switcher Cards staggered entry */
+  .mobile-switcher-card {
+    animation: switcherCardIn 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  }
+
+  @keyframes switcherCardIn {
+    from {
+      opacity: 0;
+      transform: scale(0.8) translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  /* Glassmorphic apps adaptation */
+  .mobile-app-body {
+    background: transparent !important;
+  }
+  .dw, .mail, .fm, .term, .wlt, .dfx, .df-container, .chx {
+    background: transparent !important;
+  }
+
+  /* Smooth inertia scrolling on touch devices and scrollbar hiding */
+  .dw-list, .mail-list, .fm-body, .term, .wlt, .dfx, .chx, .apps-drawer-grid, .mobile-switcher-cards {
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  .dw-list::-webkit-scrollbar,
+  .mail-list::-webkit-scrollbar,
+  .fm-body::-webkit-scrollbar,
+  .term::-webkit-scrollbar,
+  .wlt::-webkit-scrollbar,
+  .dfx::-webkit-scrollbar,
+  .chx::-webkit-scrollbar,
+  .apps-drawer-grid::-webkit-scrollbar,
+  .mobile-switcher-cards::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}

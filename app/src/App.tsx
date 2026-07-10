@@ -5,6 +5,8 @@ import { Boot } from './os/Boot';
 import { Login } from './os/Login';
 import { Desktop } from './os/Desktop';
 import { resumeAudio, sfx } from './lib/sound';
+import { useIsMobile } from './hooks/useIsMobile';
+import { MobileShell } from './os/mobile/MobileShell';
 
 class EB extends Component<{ children: ReactNode }, { err: Error | null }> {
   state = { err: null as Error | null };
@@ -24,6 +26,7 @@ export function App() {
   const phase = useOS((s) => s.phase);
   const cheater = useOS((s) => s.cheater);
   const chosen = useOS((s) => s.chosen);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const onDown = () => resumeAudio();
@@ -114,7 +117,7 @@ export function App() {
         <EB>
           {phase === 'boot' && <Boot />}
           {phase === 'login' && <Login />}
-          {phase === 'desktop' && <Desktop />}
+          {phase === 'desktop' && (isMobile ? <MobileShell /> : <Desktop />)}
         </EB>
       )}
     </div>

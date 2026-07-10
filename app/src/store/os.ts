@@ -103,6 +103,9 @@ export function wipeSave(): void {
       wallpaper: 'sonoma',
       phase: 'boot',
       wins: {},
+      mobileView: null,
+      mobileStack: [],
+      mobileTab: 'degenfun',
     });
   } catch { /* ignore */ }
 }
@@ -136,6 +139,11 @@ interface OSState {
   holdings: Record<string, number>; // coinId -> token quantity owned
   wallpaper: 'sonoma' | 'blueprint' | 'code' | 'helloworld';
 
+  // mobile navigation state
+  mobileView: AppId | null;
+  mobileStack: AppId[];
+  mobileTab: AppId;
+
   // multiplayer status (never persisted)
   netReady: boolean;    // socket open — server reachable
   online: boolean;      // authenticated — server owns shared state
@@ -167,6 +175,9 @@ interface OSState {
 
   toggleOverview: (force?: boolean) => void;
   toggleMuted: () => void;
+
+  mobileBack: () => void;
+  goHome: () => void;
 }
 
 /* Fields that get written to localStorage. Everything transient (windows,
@@ -257,6 +268,10 @@ export const useOS = create<OSState>()(persist((set, get) => ({
   onlineCount: 0,
   admin: false,
 
+  mobileView: null,
+  mobileStack: [],
+  mobileTab: 'degenfun',
+
   setPhase: (p) => set({ phase: p }),
 
   choose: (c, username) => {
@@ -276,6 +291,28 @@ export const useOS = create<OSState>()(persist((set, get) => ({
   setWallpaper: (wp) => set({ wallpaper: wp }),
 
   openApp: (id) => {
+    const isMobile = window.innerWidth <= 768 || window.matchMedia('(pointer: coarse)').matches;
+    if (isMobile) {
+      const s = get();
+      if (s.mobileView === id) return;
+      const newStack = s.mobileView ? [...s.mobileStack, s.mobileView] : s.mobileStack;
+      
+      const nextWins = { ...s.wins };
+      if (!nextWins[id]) {
+        nextWins[id] = {
+          id, x: 0, y: 0, w: 300, h: 500, z: s.z + 1, min: false, max: false
+        };
+      }
+
+      set({
+        mobileView: id,
+        mobileStack: newStack,
+        mobileTab: id,
+        wins: nextWins,
+        z: s.z + 1,
+      });
+      return;
+    }
     const s = get();
     const existing = s.wins[id];
     if (existing) { if (existing.min) get().restoreApp(id); else get().focusApp(id); return; }
@@ -295,7 +332,26 @@ export const useOS = create<OSState>()(persist((set, get) => ({
   },
 
   closeApp: (id) => {
-    const wins = { ...get().wins }; delete wins[id]; set({ wins });
+    const wins = { ...get().wins };
+    delete wins[id];
+    const isMobile = window.innerWidth <= 768 || window.matchMedia('(pointer: coarse)').matches;
+    if (isMobile) {
+      const s = get();
+      if (s.mobileView === id) {
+        const nextStack = s.mobileStack.filter((x) => x !== id);
+        const prev = nextStack.pop() ?? null;
+        set({
+          wins,
+          mobileView: prev,
+          mobileStack: nextStack,
+          mobileTab: prev ?? 'degenfun',
+        });
+        return;
+      }
+      set({ wins, mobileStack: s.mobileStack.filter((x) => x !== id) });
+      return;
+    }
+    set({ wins });
   },
 
   minApp: (id) => {
@@ -518,6 +574,25 @@ export const useOS = create<OSState>()(persist((set, get) => ({
     sfx.coin();
     s.toast(`$${cleanTicker} deployed! Go shill it, degen.`, 'good');
     return true;
+  },
+
+  mobileBack: () => {
+    const s = get();
+    if (s.mobileStack.length === 0) {
+      set({ mobileView: null, mobileTab: 'degenfun' });
+      return;
+    }
+    const nextStack = [...s.mobileStack];
+    const prev = nextStack.pop() ?? null;
+    set({
+      mobileView: prev,
+      mobileStack: nextStack,
+      mobileTab: prev ?? 'degenfun',
+    });
+  },
+
+  goHome: () => {
+    set({ mobileView: null, mobileStack: [] });
   },
 }), {
   name: SAVE_KEY,
