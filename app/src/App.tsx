@@ -1,9 +1,10 @@
-import { useEffect, Component, type ReactNode } from 'react';
+import { useEffect, useState, Component, type ReactNode } from 'react';
 import { useOS, wipeSave } from './store/os';
 import { initNet } from './lib/net';
 import { Boot } from './os/Boot';
 import { Login } from './os/Login';
 import { Desktop } from './os/Desktop';
+import { Landing } from './os/Landing';
 import { resumeAudio, sfx } from './lib/sound';
 import { useIsMobile } from './hooks/useIsMobile';
 import { MobileShell } from './os/mobile/MobileShell';
@@ -27,13 +28,26 @@ export function App() {
   const cheater = useOS((s) => s.cheater);
   const chosen = useOS((s) => s.chosen);
   const isMobile = useIsMobile();
+  const [route, setRoute] = useState(window.location.pathname);
+
+  // Lightweight routing listener
+  useEffect(() => {
+    const handlePop = () => setRoute(window.location.pathname);
+    window.addEventListener('popstate', handlePop);
+    return () => window.removeEventListener('popstate', handlePop);
+  }, []);
 
   useEffect(() => {
     const onDown = () => resumeAudio();
     window.addEventListener('pointerdown', onDown, { once: true });
-    initNet(); // connect to the multiplayer server if one is reachable
+    
+    // Only connect WebSocket network layer if user is actually in game mode (/play)
+    if (route === '/play') {
+      initNet();
+    }
+    
     return () => window.removeEventListener('pointerdown', onDown);
-  }, []);
+  }, [route]);
 
   // Play alarm sound if cheater mode is triggered
   useEffect(() => {
@@ -52,6 +66,11 @@ export function App() {
       location.reload();
     }
   };
+
+  // Route: Landing page at /
+  if (route !== '/play') {
+    return <Landing />;
+  }
 
   return (
     <div id="app">
