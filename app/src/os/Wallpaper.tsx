@@ -241,17 +241,94 @@ ${GLOBAL_DEFS}
 <text x="720" y="460" font-family="monospace, Courier, fixed" font-size="32" fill="#34D399" text-anchor="middle" letter-spacing="1">Hello World.</text>
 `;
 
+// ===== HOOD wallpapers — matte black x electric green (#00C805) =====
+const WALLPAPER_HOODMESH = `
+<defs>
+  <linearGradient id="hm-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#070B08" />
+    <stop offset="55%" stop-color="#0A0F0A" />
+    <stop offset="100%" stop-color="#030503" />
+  </linearGradient>
+  <radialGradient id="hm-g1" cx="22%" cy="26%" r="55%">
+    <stop offset="0%" stop-color="#00C805" stop-opacity="0.22" />
+    <stop offset="55%" stop-color="#00C805" stop-opacity="0.04" />
+    <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+  </radialGradient>
+  <radialGradient id="hm-g2" cx="82%" cy="14%" r="52%">
+    <stop offset="0%" stop-color="#39FF6B" stop-opacity="0.13" />
+    <stop offset="60%" stop-color="#00C805" stop-opacity="0.02" />
+    <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+  </radialGradient>
+  <radialGradient id="hm-g3" cx="58%" cy="92%" r="55%">
+    <stop offset="0%" stop-color="#00C805" stop-opacity="0.16" />
+    <stop offset="55%" stop-color="#00C805" stop-opacity="0.03" />
+    <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+  </radialGradient>
+  <pattern id="hm-grid" width="52" height="52" patternUnits="userSpaceOnUse">
+    <path d="M52 0H0V52" fill="none" stroke="#00C805" stroke-opacity="0.05" stroke-width="1" />
+  </pattern>
+</defs>
+<rect width="1440" height="900" fill="url(#hm-bg)" />
+<rect width="1440" height="900" fill="url(#hm-grid)" />
+<rect width="1440" height="900" fill="url(#hm-g1)" />
+<rect width="1440" height="900" fill="url(#hm-g2)" />
+<rect width="1440" height="900" fill="url(#hm-g3)" />
+<g opacity="0.55">
+  <circle cx="1150" cy="210" r="2.4" fill="#39FF6B" />
+  <circle cx="300" cy="680" r="2" fill="#00C805" />
+  <circle cx="980" cy="770" r="1.8" fill="#39FF6B" />
+</g>
+`;
+
+const WALLPAPER_HOODGRID = `
+<defs>
+  <linearGradient id="gt-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" stop-color="#050705" />
+    <stop offset="100%" stop-color="#000000" />
+  </linearGradient>
+  <linearGradient id="gt-fill" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" stop-color="#00C805" stop-opacity="0.10" />
+    <stop offset="100%" stop-color="#00C805" stop-opacity="0" />
+  </linearGradient>
+  <linearGradient id="gt-horizon" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#00C805" stop-opacity="0" />
+    <stop offset="50%" stop-color="#00C805" stop-opacity="0.45" />
+    <stop offset="100%" stop-color="#00C805" stop-opacity="0" />
+  </linearGradient>
+  <pattern id="gt-grid" width="44" height="44" patternUnits="userSpaceOnUse">
+    <path d="M44 0H0V44" fill="none" stroke="#00C805" stroke-opacity="0.06" stroke-width="1" />
+  </pattern>
+</defs>
+<rect width="1440" height="900" fill="url(#gt-bg)" />
+<rect width="1440" height="900" fill="url(#gt-grid)" />
+<rect x="0" y="430" width="1440" height="2" fill="url(#gt-horizon)" />
+<path d="M0,760 L160,735 L320,770 L480,680 L640,715 L800,585 L960,625 L1120,480 L1280,540 L1440,395 L1440,900 L0,900 Z" fill="url(#gt-fill)" />
+<path d="M0,760 L160,735 L320,770 L480,680 L640,715 L800,585 L960,625 L1120,480 L1280,540 L1440,395" fill="none" stroke="#00C805" stroke-opacity="0.55" stroke-width="2.5" />
+<g opacity="0.5">
+  <line x1="240" y1="292" x2="240" y2="368" stroke="#00C805" stroke-width="1.4" />
+  <rect x="234" y="308" width="12" height="34" fill="#00C805" />
+  <line x1="520" y1="240" x2="520" y2="344" stroke="#00C805" stroke-width="1.4" />
+  <rect x="514" y="258" width="12" height="60" fill="#00C805" />
+  <line x1="820" y1="284" x2="820" y2="376" stroke="#F5566E" stroke-width="1.4" />
+  <rect x="814" y="300" width="12" height="52" fill="#F5566E" />
+  <line x1="1120" y1="220" x2="1120" y2="312" stroke="#00C805" stroke-width="1.4" />
+  <rect x="1114" y="236" width="12" height="58" fill="#00C805" />
+</g>
+`;
+
 export function Wallpaper() {
   const wallpaper = useOS((s) => s.wallpaper);
 
   const activeSVG = useMemo(() => {
     switch (wallpaper) {
+      case 'hoodgrid': return WALLPAPER_HOODGRID;
+      case 'sonoma': return WALLPAPER_SONOMA;
       case 'blueprint': return WALLPAPER_BLUEPRINT;
       case 'code': return WALLPAPER_CODE;
       case 'helloworld': return WALLPAPER_HELLOWORLD;
-      case 'sonoma':
+      case 'hoodmesh':
       default:
-        return WALLPAPER_SONOMA;
+        return WALLPAPER_HOODMESH;
     }
   }, [wallpaper]);
 

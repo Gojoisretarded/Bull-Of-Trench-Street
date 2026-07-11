@@ -1,27 +1,39 @@
 @import "./mobile.css";
 
 :root{
-    /* fine matte blue — Bull of Trench Street. --gold var name kept = accent (now blue) */
-    --ground:#0A0F16; --surface:#121924; --surface-2:#19222F; --surface-3:#22303F;
-    --line:#273545; --line-soft:#1B2532; --ink:#E7ECF3; --muted:#8896A8; --faint:#586472;
-    --gold:#4F8FE6; --gold-dim:#3B6FB8; --gold-ink:#07101C;
-    --green:#34D399; --red:#F5566E; --brand:#4F8FE6; --blue:#5C8DF0;
-    --glow:rgba(79,143,230,.15);
+    /* HOOD (default): electric green x matte black — Robinhood-Chain vibe.
+       --gold var name kept = accent (now electric green); money reads green. */
+    --ground:#050705; --surface:#0F130E; --surface-2:#151A13; --surface-3:#1E251C;
+    --line:#243524; --line-soft:#182116; --ink:#E8F0E8; --muted:#8B9E8B; --faint:#586957;
+    --gold:#00C805; --gold-dim:#05A208; --gold-ink:#04210A;
+    --green:#00C805; --red:#F5566E; --brand:#00C805; --blue:#57A8F2;
+    --glow:rgba(0,200,5,.16);
     --mono:SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;
     --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --tb:44px;
     --ease:cubic-bezier(.22,1,.36,1);
     --blur:blur(18px) saturate(1.35);
-    --bar-bg:#14101B;
-    --bar-border:rgba(50,38,65,.6);
-    --dock-bg:#17121E;
-    --dock-border:rgba(50,38,65,.7);
+    --bar-bg:#0A0D0A;
+    --bar-border:rgba(0,200,5,.14);
+    --dock-bg:#0C100B;
+    --dock-border:rgba(0,200,5,.16);
 
     /* Safe Area Insets for notched phones */
     --safe-t: env(safe-area-inset-top, 0px);
     --safe-b: env(safe-area-inset-bottom, 0px);
     --safe-l: env(safe-area-inset-left, 0px);
     --safe-r: env(safe-area-inset-right, 0px);
+  }
+
+  /* ================= DARK (classic matte-blue — now an option) ================= */
+  html[data-theme="dark"] {
+    --ground:#0A0F16; --surface:#121924; --surface-2:#19222F; --surface-3:#22303F;
+    --line:#273545; --line-soft:#1B2532; --ink:#E7ECF3; --muted:#8896A8; --faint:#586472;
+    --gold:#4F8FE6; --gold-dim:#3B6FB8; --gold-ink:#07101C;
+    --green:#34D399; --red:#F5566E; --brand:#4F8FE6; --blue:#5C8DF0;
+    --glow:rgba(79,143,230,.15);
+    --bar-bg:#14101B; --bar-border:rgba(50,38,65,.6);
+    --dock-bg:#17121E; --dock-border:rgba(50,38,65,.7);
   }
 
   /* ================= WIDE LIGHT MODE ================= */

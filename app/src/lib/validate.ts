@@ -14,7 +14,7 @@ export const USERNAME_RE = /^[A-Za-z0-9_]{3,16}$/;
 export const TICKER_RE = /^[A-Z0-9]{2,8}$/;
 export const COIN_ID_RE = /^[a-z0-9_-]{1,16}$/;
 
-const WALLPAPERS = ['sonoma', 'blueprint', 'code', 'helloworld'] as const;
+const WALLPAPERS = ['hoodmesh', 'hoodgrid', 'sonoma', 'blueprint', 'code', 'helloworld'] as const;
 export type WallpaperId = (typeof WALLPAPERS)[number];
 
 export function isUsername(v: unknown): v is string {

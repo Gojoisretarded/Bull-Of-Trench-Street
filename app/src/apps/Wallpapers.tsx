@@ -2,7 +2,7 @@ import { useOS } from '../store/os';
 import { sfx } from '../lib/sound';
 
 interface WallpaperOption {
-  id: 'sonoma' | 'blueprint' | 'code' | 'helloworld';
+  id: 'hoodmesh' | 'hoodgrid' | 'sonoma' | 'blueprint' | 'code' | 'helloworld';
   name: string;
   desc: string;
   previewBg: string;
@@ -12,12 +12,26 @@ interface WallpaperOption {
 
 const OPTIONS: WallpaperOption[] = [
   {
+    id: 'hoodmesh',
+    name: 'Hood Mesh',
+    desc: 'Matte black with an electric-green aurora mesh. Made for Hood.',
+    previewBg: 'radial-gradient(circle at 26% 26%, rgba(0,200,5,0.30), transparent 55%), #070B08',
+    textColor: '#00C805',
+    badge: 'DEFAULT',
+  },
+  {
+    id: 'hoodgrid',
+    name: 'Trench Grid',
+    desc: 'Green terminal grid with a rising chart and candles.',
+    previewBg: 'linear-gradient(180deg, #050705 0%, #000000 100%)',
+    textColor: '#00C805',
+  },
+  {
     id: 'sonoma',
     name: 'Sonoma Grid',
     desc: 'Low-poly cyber bull with a neon mesh gradient background.',
     previewBg: 'linear-gradient(135deg, #05070f 0%, #0b0e17 50%, #020306 100%)',
     textColor: '#E7ECF3',
-    badge: 'DEFAULT',
   },
   {
     id: 'blueprint',
@@ -96,6 +110,12 @@ export function Wallpapers() {
                     position: 'relative',
                   }}
                 >
+                  {opt.id === 'hoodmesh' && (
+                    <div style={{ color: '#39FF6B', opacity: 0.75, fontSize: '20px', fontWeight: 'bold' }}>▲</div>
+                  )}
+                  {opt.id === 'hoodgrid' && (
+                    <div style={{ color: opt.textColor, fontFamily: 'var(--mono)', fontSize: '13px', fontWeight: 'bold' }}>📈</div>
+                  )}
                   {opt.id === 'sonoma' && (
                     <div style={{ color: '#00f2ff', opacity: 0.35, fontSize: '18px', fontWeight: 'bold' }}>♉</div>
                   )}

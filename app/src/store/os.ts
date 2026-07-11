@@ -100,7 +100,7 @@ export function wipeSave(): void {
       txns: [],
       coins: initialCoins(),
       holdings: {},
-      wallpaper: 'sonoma',
+      wallpaper: 'hoodmesh',
       phase: 'boot',
       wins: {},
       mobileView: null,
@@ -137,7 +137,7 @@ interface OSState {
   toasts: Toast[];
 
   holdings: Record<string, number>; // coinId -> token quantity owned
-  wallpaper: 'sonoma' | 'blueprint' | 'code' | 'helloworld';
+  wallpaper: 'hoodmesh' | 'hoodgrid' | 'sonoma' | 'blueprint' | 'code' | 'helloworld';
 
   // mobile navigation state
   mobileView: AppId | null;
@@ -225,7 +225,7 @@ function restoreSave(persisted: unknown, current: OSState): OSState {
     txns: sanitizeTxns(p.txns),
     coins: sanitizeCoins(p.coins) ?? initialCoins(),
     holdings: sanitizeHoldings(p.holdings),
-    wallpaper: sanitizeWallpaper(p.wallpaper) ?? 'sonoma',
+    wallpaper: sanitizeWallpaper(p.wallpaper) ?? 'hoodmesh',
   };
 
   // Integrity re-check across the reload boundary.
@@ -262,7 +262,7 @@ export const useOS = create<OSState>()(persist((set, get) => ({
   gridOpen: false,
   toasts: [],
   holdings: {},
-  wallpaper: 'sonoma',
+  wallpaper: 'hoodmesh',
   netReady: false,
   online: false,
   onlineCount: 0,

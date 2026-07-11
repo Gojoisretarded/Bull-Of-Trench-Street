@@ -8,8 +8,9 @@ const CHAR_NAMES: Record<string, string> = {
   orphan: 'The Orphan', fumbler: 'The Fumbler', nepo: 'The Nepo', addict: 'The Addict',
 };
 
-function getInitialTheme(): 'dark' | 'light' {
-  try { return (localStorage.getItem('trenchos.theme') as 'dark' | 'light') || 'dark'; } catch { return 'dark'; }
+type ThemeId = 'hood' | 'dark' | 'light';
+function getInitialTheme(): ThemeId {
+  try { return (localStorage.getItem('trenchos.theme') as ThemeId) || 'hood'; } catch { return 'hood'; }
 }
 
 function SectionTitle({ children }: { children: string }) {
@@ -53,14 +54,13 @@ export function Settings() {
   const wallpaper = useOS((s) => s.wallpaper);
   const isMobile = useIsMobile();
 
-  const [theme, setThemeState] = useState<'dark' | 'light'>(getInitialTheme);
-  const toggleTheme = useCallback(() => {
-    const next = theme === 'dark' ? 'light' : 'dark';
+  const [theme, setThemeState] = useState<ThemeId>(getInitialTheme);
+  const applyTheme = useCallback((next: ThemeId) => {
     document.documentElement.setAttribute('data-theme', next);
     try { localStorage.setItem('trenchos.theme', next); } catch { /* storage blocked */ }
     setThemeState(next);
     sfx.click();
-  }, [theme]);
+  }, []);
 
   const logOff = () => {
     if (!window.confirm('Log off and wipe this save? Your bag, clout and coins are gone forever.')) return;
@@ -100,7 +100,7 @@ export function Settings() {
           right={<span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: connColor }}>{connLabel}</span>}
         />
 
-        <SectionTitle>{isMobile ? 'SOUND' : 'SOUND & THEME'}</SectionTitle>
+        <SectionTitle>SOUND &amp; THEME</SectionTitle>
         <Row
           label="Sound effects"
           sub="Clicks, coins and pain"
@@ -110,18 +110,37 @@ export function Settings() {
             </button>
           }
         />
-        {/* Light mode is desktop-only — hidden on mobile (mobile is dark-only). */}
-        {!isMobile && (
-          <Row
-            label="Theme"
-            sub="Dark for the trenches, light for the brave"
-            right={
-              <button className="btn ghost" onClick={toggleTheme} style={{ fontSize: 11, padding: '6px 12px' }}>
-                {theme === 'dark' ? '🌙 DARK' : '☀️ LIGHT'}
-              </button>
-            }
-          />
-        )}
+        {/* Hood (default) · Dark · Light. Light is a desktop-only option. */}
+        <Row
+          label="Theme"
+          sub="Hood by default — matte black &amp; electric green"
+          right={
+            <div style={{ display: 'flex', gap: 6 }}>
+              {([
+                { id: 'hood', label: 'Hood', dot: '#00C805' },
+                { id: 'dark', label: 'Dark', dot: '#4F8FE6' },
+                { id: 'light', label: 'Light', dot: '#EAE8E4' },
+              ] as { id: ThemeId; label: string; dot: string }[])
+                .filter((t) => !isMobile || t.id !== 'light')
+                .map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => applyTheme(t.id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      fontSize: 11, fontWeight: 700, padding: '7px 10px', borderRadius: 8,
+                      background: theme === t.id ? 'var(--surface-3)' : 'transparent',
+                      border: `1px solid ${theme === t.id ? 'var(--gold)' : 'var(--line-soft)'}`,
+                      color: theme === t.id ? 'var(--ink)' : 'var(--muted)',
+                    }}
+                  >
+                    <span style={{ width: 9, height: 9, borderRadius: '50%', background: t.dot, border: '1px solid rgba(255,255,255,.25)' }} />
+                    {t.label}
+                  </button>
+                ))}
+            </div>
+          }
+        />
 
         <SectionTitle>APPEARANCE</SectionTitle>
         <Row
