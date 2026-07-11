@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useOS, wipeSave } from '../store/os';
 import { sfx, setMuted } from '../lib/sound';
 import { netSend } from '../lib/netBus';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const CHAR_NAMES: Record<string, string> = {
   orphan: 'The Orphan', fumbler: 'The Fumbler', nepo: 'The Nepo', addict: 'The Addict',
@@ -50,6 +51,7 @@ export function Settings() {
   const toggleMuted = useOS((s) => s.toggleMuted);
   const openApp = useOS((s) => s.openApp);
   const wallpaper = useOS((s) => s.wallpaper);
+  const isMobile = useIsMobile();
 
   const [theme, setThemeState] = useState<'dark' | 'light'>(getInitialTheme);
   const toggleTheme = useCallback(() => {
@@ -98,7 +100,7 @@ export function Settings() {
           right={<span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: connColor }}>{connLabel}</span>}
         />
 
-        <SectionTitle>SOUND &amp; THEME</SectionTitle>
+        <SectionTitle>{isMobile ? 'SOUND' : 'SOUND & THEME'}</SectionTitle>
         <Row
           label="Sound effects"
           sub="Clicks, coins and pain"
@@ -108,15 +110,18 @@ export function Settings() {
             </button>
           }
         />
-        <Row
-          label="Theme"
-          sub="Dark for the trenches, light for the brave"
-          right={
-            <button className="btn ghost" onClick={toggleTheme} style={{ fontSize: 11, padding: '6px 12px' }}>
-              {theme === 'dark' ? '🌙 DARK' : '☀️ LIGHT'}
-            </button>
-          }
-        />
+        {/* Light mode is desktop-only — hidden on mobile (mobile is dark-only). */}
+        {!isMobile && (
+          <Row
+            label="Theme"
+            sub="Dark for the trenches, light for the brave"
+            right={
+              <button className="btn ghost" onClick={toggleTheme} style={{ fontSize: 11, padding: '6px 12px' }}>
+                {theme === 'dark' ? '🌙 DARK' : '☀️ LIGHT'}
+              </button>
+            }
+          />
+        )}
 
         <SectionTitle>APPEARANCE</SectionTitle>
         <Row

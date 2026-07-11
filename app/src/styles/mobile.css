@@ -119,6 +119,52 @@
   transition: filter 0.3s ease, opacity 0.3s ease;
 }
 
+/* ---- Login / Boot: fit inside the phone's safe area, scroll not clip ---- */
+@media (max-width: 768px) {
+  /* Vertically centered + absolute positioning clipped the clock behind the
+     status bar and the ENTER button behind the browser toolbar. Switch to a
+     top-aligned scrollable column with safe-area padding. */
+  #login {
+    justify-content: flex-start !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding: calc(var(--safe-t) + 26px) 16px calc(var(--safe-b) + 32px) !important;
+    gap: 12px !important;
+  }
+
+  #boot {
+    padding: calc(var(--safe-t) + 20px) 16px calc(var(--safe-b) + 20px) !important;
+  }
+
+  #lclock {
+    font-size: clamp(30px, 11vw, 42px) !important;
+  }
+
+  #ldate { margin-top: -6px !important; }
+  #login h2 { margin-top: 6px !important; }
+
+  /* Two-up character cards instead of a 4-wide row squeezed onto a phone. */
+  .roster {
+    grid-template-columns: repeat(2, 1fr) !important;
+    width: 100% !important;
+    gap: 10px !important;
+    margin-top: 4px !important;
+  }
+
+  .pick {
+    padding: 14px !important;
+    border-radius: 14px !important;
+  }
+
+  /* Keep the CTA in normal flow and comfortably tappable. */
+  #enter {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 320px !important;
+    margin-bottom: 4px;
+  }
+}
+
 .mobile-home .hi {
   font-family: var(--mono);
   font-size: 11px;
