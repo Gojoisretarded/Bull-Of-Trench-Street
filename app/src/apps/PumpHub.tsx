@@ -524,21 +524,29 @@ function PlayerModal({ video, onClose }: { video: Video; onClose: () => void }) 
           padding: 24px;
         }
         .ph-modal {
-          width: 100%;
-          max-width: 780px;
+          max-width: 94vw;
+          height: 84vh;
           background: #111214;
           border-radius: 12px;
           border: 1.5px solid #282A2E;
           overflow: hidden;
           display: flex;
+          flex-direction: row;
+        }
+        .ph-modal-side {
+          flex: 1 1 380px;
+          min-width: 300px;
+          max-width: 440px;
+          display: flex;
           flex-direction: column;
-          max-height: 90vh;
+          overflow: hidden;
         }
         .ph-modal-player {
-          width: 100%;
+          height: 100%;
+          aspect-ratio: 9 / 16;
+          flex: 0 0 auto;
           position: relative;
           background: #000;
-          aspect-ratio: 16 / 9;
         }
         .ph-modal-canvas {
           width: 100%;
@@ -610,15 +618,17 @@ function PlayerModal({ video, onClose }: { video: Video; onClose: () => void }) 
         .ph-modal-body {
           flex: 1;
           display: flex;
-          overflow: hidden;
+          flex-direction: column;
+          overflow-y: auto;
         }
         .ph-chat {
           flex: 1;
           display: flex;
           flex-direction: column;
           padding: 12px 16px;
-          border-right: 1.5px solid #232528;
+          border-bottom: 1.5px solid #232528;
           overflow: hidden;
+          min-height: 140px;
         }
         .ph-chat-header {
           font-size: 11px;
@@ -646,7 +656,7 @@ function PlayerModal({ video, onClose }: { video: Video; onClose: () => void }) 
           margin-right: 4px;
         }
         .ph-promo {
-          width: 250px;
+          width: 100%;
           padding: 12px 16px;
           background: #15171B;
           display: flex;
@@ -674,7 +684,7 @@ function PlayerModal({ video, onClose }: { video: Video; onClose: () => void }) 
         .ph-modal-video {
           width: 100%;
           height: 100%;
-          object-fit: contain;
+          object-fit: cover;
           background: #000;
           display: block;
         }
@@ -682,13 +692,12 @@ function PlayerModal({ video, onClose }: { video: Video; onClose: () => void }) 
         /* ---- Mobile ---- */
         @media (max-width: 640px) {
           .ph-modal-overlay { padding: 0; }
-          .ph-modal { max-width: 100%; max-height: 100%; height: 100%; border-radius: 0; border: none; }
+          .ph-modal { flex-direction: column; max-width: 100%; width: 100%; height: 100%; max-height: 100%; border-radius: 0; border: none; }
+          .ph-modal-player { width: 100%; height: auto; aspect-ratio: 9 / 16; max-height: 60vh; flex: 0 0 auto; }
+          .ph-modal-side { flex: 1; min-width: 0; max-width: none; }
           .ph-modal-info { padding: 12px; gap: 10px; }
           .ph-modal-title { font-size: 13.5px; }
           .ph-modal-meta { font-size: 10.5px; }
-          .ph-modal-body { flex-direction: column; overflow-y: auto; }
-          .ph-chat { border-right: none; border-bottom: 1.5px solid #232528; min-height: 150px; }
-          .ph-promo { width: 100%; }
         }
       `}</style>
 
@@ -698,6 +707,7 @@ function PlayerModal({ video, onClose }: { video: Video; onClose: () => void }) 
           <video className="ph-modal-video" src={video.src} controls autoPlay loop playsInline />
         </div>
 
+        <div className="ph-modal-side">
         {/* Video Info Header */}
         <div className="ph-modal-info">
           <div>
@@ -743,6 +753,7 @@ function PlayerModal({ video, onClose }: { video: Video; onClose: () => void }) 
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
