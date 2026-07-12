@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AppIcon } from '../apps/icons';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 // Custom lightweight scroll-reveal wrapper for premium animations
 function FadeInWhenVisible({ children }: { children: React.ReactNode }) {
@@ -35,6 +36,7 @@ function FadeInWhenVisible({ children }: { children: React.ReactNode }) {
 export function Landing() {
   const [active, setActive] = useState('');
   const [copied, setCopied] = useState(false);
+  const isMobile = useIsMobile();
 
   // Scrollspy: highlight the nav link for the section currently in view
   useEffect(() => {
@@ -274,18 +276,18 @@ export function Landing() {
         <div style={{
           maxWidth: '1200px',
           margin: '0 auto',
-          padding: '0 24px',
+          padding: isMobile ? '0 16px' : '0 24px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           height: '72px'
         }}>
-          <a href="#top" style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 700, fontSize: '18px', color: '#EAF2E6' }}>
+          <a href="#top" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '9px' : '12px', fontWeight: 700, fontSize: isMobile ? '15px' : '18px', color: '#EAF2E6' }}>
             <img src="/Logo.jpeg" alt="Bull of Trench Street" style={{ width: '38px', height: '38px', borderRadius: '10px', objectFit: 'cover', border: '1px solid rgba(198,237,30,0.2)' }} />
             <span>Bull of <span style={{ color: '#C6ED1E' }}>Trench Street</span></span>
           </a>
 
-          <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
+          <div style={{ display: isMobile ? 'none' : 'flex', gap: '32px', alignItems: 'center' }}>
             {[
               { id: 'about', label: 'About' },
               { id: 'market', label: 'Market' },
@@ -302,8 +304,8 @@ export function Landing() {
               display: 'inline-flex',
               alignItems: 'center',
               fontWeight: 700,
-              fontSize: '14px',
-              padding: '12px 24px',
+              fontSize: isMobile ? '13px' : '14px',
+              padding: isMobile ? '10px 16px' : '12px 24px',
               borderRadius: '12px',
               background: '#C6ED1E',
               color: '#060806',
@@ -334,8 +336,8 @@ export function Landing() {
       </div>
 
       {/* HERO SECTION */}
-      <header id="top" className="animate-fade-in" style={{ position: 'relative', padding: '80px 0 60px', zIndex: 1 }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '60px', alignItems: 'center' }}>
+      <header id="top" className="animate-fade-in" style={{ position: 'relative', padding: isMobile ? '36px 0 44px' : '80px 0 60px', zIndex: 1 }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.1fr 0.9fr', gap: isMobile ? '36px' : '60px', alignItems: 'center' }}>
           <div>
             <div style={{
               fontFamily: 'var(--mono)',
@@ -413,7 +415,7 @@ export function Landing() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '16px' }}>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
               <a href="/play" style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -485,9 +487,9 @@ export function Landing() {
       </div>
 
       {/* ABOUT SECTION */}
-      <section id="about" style={{ padding: '100px 0', borderTop: '1px solid rgba(198,237,30,0.05)' }}>
+      <section id="about" style={{ padding: isMobile ? '60px 0' : '100px 0', borderTop: '1px solid rgba(198,237,30,0.05)' }}>
         <FadeInWhenVisible>
-          <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: '1fr 1.1fr', gap: '60px', alignItems: 'center' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.1fr', gap: isMobile ? '32px' : '60px', alignItems: 'center' }}>
             <div>
               <div style={{
                 borderRadius: '24px',
@@ -556,7 +558,7 @@ export function Landing() {
       </section>
 
       {/* MARKET LIVE WIDGET */}
-      <section id="market" style={{ padding: '80px 0', background: '#050705', borderTop: '1px solid rgba(198,237,30,0.05)' }}>
+      <section id="market" style={{ padding: isMobile ? '56px 0' : '80px 0', background: '#050705', borderTop: '1px solid rgba(198,237,30,0.05)' }}>
         <FadeInWhenVisible>
           <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
             <div style={{ textAlign: 'center', marginBottom: '48px' }}>
@@ -609,7 +611,7 @@ export function Landing() {
       </section>
 
       {/* CORE FEATURES (SIMULATION) */}
-      <section id="features" style={{ padding: '100px 0', borderTop: '1px solid rgba(198,237,30,0.05)' }}>
+      <section id="features" style={{ padding: isMobile ? '60px 0' : '100px 0', borderTop: '1px solid rgba(198,237,30,0.05)' }}>
         <FadeInWhenVisible>
           <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
             <div style={{ textAlign: 'center', marginBottom: '64px' }}>
@@ -635,7 +637,7 @@ export function Landing() {
               </h2>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))', gap: isMobile ? '16px' : '30px' }}>
               {/* Feature 1 */}
               <div className="feature-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -683,7 +685,7 @@ export function Landing() {
       </section>
 
       {/* ACTUAL GAMEPLAY SCREENSHOTS */}
-      <section id="screenshots" style={{ padding: '100px 0', background: '#050705', borderTop: '1px solid rgba(198,237,30,0.05)' }}>
+      <section id="screenshots" style={{ padding: isMobile ? '60px 0' : '100px 0', background: '#050705', borderTop: '1px solid rgba(198,237,30,0.05)' }}>
         <FadeInWhenVisible>
           <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
             <div style={{ textAlign: 'center', marginBottom: '64px' }}>
@@ -709,7 +711,7 @@ export function Landing() {
               </h2>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(480px, 1fr))', gap: '32px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(480px, 1fr))', gap: isMobile ? '16px' : '32px' }}>
               <div className="gallery-item">
                 <img src="/screenshots/desktop.jpg" alt="Desktop OS layout" />
                 <div className="overlay">
@@ -743,7 +745,7 @@ export function Landing() {
       </section>
 
       {/* MEMES SECTION (COMES AFTER GAMEPLAY) */}
-      <section id="memes" style={{ padding: '100px 0', borderTop: '1px solid rgba(198,237,30,0.05)' }}>
+      <section id="memes" style={{ padding: isMobile ? '60px 0' : '100px 0', borderTop: '1px solid rgba(198,237,30,0.05)' }}>
         <FadeInWhenVisible>
           <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
             <div style={{ textAlign: 'center', marginBottom: '64px' }}>
