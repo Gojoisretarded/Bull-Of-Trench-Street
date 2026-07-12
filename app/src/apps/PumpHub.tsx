@@ -150,6 +150,7 @@ export function PumpHub() {
           color: #E2E8F0;
           font-family: system-ui, -apple-system, sans-serif;
           overflow: hidden;
+          position: relative;
         }
         .ph-header {
           display: flex;
@@ -514,18 +515,20 @@ function PlayerModal({ video, onClose }: { video: Video; onClose: () => void }) 
     <div className="ph-modal-overlay">
       <style>{`
         .ph-modal-overlay {
-          position: fixed;
+          position: absolute;
           inset: 0;
           background: rgba(0,0,0,0.85);
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 1000;
-          padding: 24px;
+          padding: 16px;
+          overflow: auto;
         }
         .ph-modal {
-          max-width: 94vw;
           height: 84vh;
+          max-height: calc(100% - 32px);
+          max-width: calc(100% - 32px);
           background: #111214;
           border-radius: 12px;
           border: 1.5px solid #282A2E;
@@ -691,7 +694,7 @@ function PlayerModal({ video, onClose }: { video: Video; onClose: () => void }) 
 
         /* ---- Mobile ---- */
         @media (max-width: 640px) {
-          .ph-modal-overlay { padding: 0; }
+          .ph-modal-overlay { position: fixed; padding: 0; overflow: hidden; }
           .ph-modal { flex-direction: column; max-width: 100%; width: 100%; height: 100%; max-height: 100%; border-radius: 0; border: none; }
           .ph-modal-player { width: 100%; height: auto; aspect-ratio: 9 / 16; max-height: 60vh; flex: 0 0 auto; }
           .ph-modal-side { flex: 1; min-width: 0; max-width: none; }
