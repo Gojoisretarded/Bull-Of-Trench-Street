@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useOS } from '../store/os';
 import { sfx } from '../lib/sound';
 
@@ -12,6 +12,7 @@ interface Video {
   likes: string;
   category: string;
   type: 'dump' | 'pump' | 'flat';
+  src: string;
 }
 
 const VIDEOS: Video[] = [
@@ -24,7 +25,8 @@ const VIDEOS: Video[] = [
     duration: '0:15',
     likes: '12%',
     category: 'Live Rugs',
-    type: 'dump'
+    type: 'dump',
+    src: '/videos/video1.mp4'
   },
   {
     id: 'liquidated',
@@ -35,7 +37,8 @@ const VIDEOS: Video[] = [
     duration: '4:20',
     likes: '99%',
     category: 'Liquidations',
-    type: 'dump'
+    type: 'dump',
+    src: '/videos/video2.mp4'
   },
   {
     id: 'grandma',
@@ -46,7 +49,8 @@ const VIDEOS: Video[] = [
     duration: '6:12',
     likes: '95%',
     category: 'Loss Porn',
-    type: 'dump'
+    type: 'dump',
+    src: '/videos/video3.mp4'
   },
   {
     id: 'giga-pump',
@@ -57,7 +61,8 @@ const VIDEOS: Video[] = [
     duration: '8:45',
     likes: '97%',
     category: 'Gains',
-    type: 'pump'
+    type: 'pump',
+    src: '/videos/video4.mp4'
   },
   {
     id: 'seedphrase',
@@ -68,7 +73,8 @@ const VIDEOS: Video[] = [
     duration: '1:30',
     likes: '45%',
     category: 'Loss Porn',
-    type: 'flat'
+    type: 'flat',
+    src: '/videos/video5.mp4'
   },
   {
     id: 'jeet-dump',
@@ -79,7 +85,8 @@ const VIDEOS: Video[] = [
     duration: '3:05',
     likes: '24%',
     category: 'Loss Porn',
-    type: 'dump'
+    type: 'dump',
+    src: '/videos/video1.mp4'
   }
 ];
 
@@ -364,6 +371,28 @@ export function PumpHub() {
         .ph-like-rate.low {
           color: #F5566E;
         }
+        .ph-thumb-video {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          background: #000;
+        }
+
+        /* ---- Mobile ---- */
+        @media (max-width: 640px) {
+          .ph-header { flex-wrap: wrap; padding: 8px 12px; gap: 8px; }
+          .ph-logo { font-size: 15px; }
+          .ph-search-bar { order: 3; flex-basis: 100%; max-width: none; }
+          .ph-header-actions { gap: 8px; }
+          .ph-btn-upload { padding: 5px 10px; font-size: 11px; }
+          .ph-content { padding: 12px; }
+          .ph-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+          .ph-thumb { height: 92px; }
+          .ph-card-info { padding: 7px 8px; }
+          .ph-card-title { font-size: 11.5px; height: auto; }
+          .ph-card-stats { font-size: 9px; }
+        }
       `}</style>
 
       {/* Header */}
@@ -433,32 +462,10 @@ export function PumpHub() {
 function VideoCard({ video, onClick }: { video: Video; onClick: () => void }) {
   const lowLikes = parseInt(video.likes) < 50;
 
-  // Generate mockup mini candle charts for thumbnails
-  const bars = Array.from({ length: 18 }, (_, i) => {
-    let height = 30 + Math.sin(i * 0.4) * 20 + Math.random() * 15;
-    if (video.type === 'dump') {
-      height = Math.max(8, 80 - i * 4.5 + (Math.random() - 0.5) * 15);
-      if (i > 14) height = 6; // rug flatline
-    } else if (video.type === 'pump') {
-      height = Math.max(8, 15 + i * 4.5 + (Math.random() - 0.5) * 15);
-    }
-    const color = video.type === 'dump' ? (i > 14 ? '#F5566E' : 'rgba(245, 86, 110, 0.6)') : video.type === 'pump' ? 'rgba(52, 211, 153, 0.6)' : 'rgba(160, 174, 192, 0.4)';
-    return (
-      <div
-        key={i}
-        className="ph-thumb-bar"
-        style={{
-          height: `${height}%`,
-          background: color
-        }}
-      />
-    );
-  });
-
   return (
     <div className="ph-card" onClick={onClick}>
       <div className="ph-thumb">
-        <div className="ph-thumb-chart">{bars}</div>
+        <video className="ph-thumb-video" src={video.src + '#t=0.1'} muted playsInline preload="metadata" />
         <div className="ph-thumb-overlay">
           <span className="ph-thumb-play">▶</span>
         </div>
@@ -478,149 +485,7 @@ function VideoCard({ video, onClick }: { video: Video; onClick: () => void }) {
 
 // Subcomponent: PlayerModal
 function PlayerModal({ video, onClose }: { video: Video; onClose: () => void }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [comments, setComments] = useState<string[]>(MOCK_COMMENTS[video.id] || []);
-  const [isPlaying, setIsPlaying] = useState(true);
-
-  // Canvas-based real-time simulation player
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let animeId: number;
-    let ticks = 0;
-    const pricePoints: number[] = [];
-
-    // Initialize chart line starting price
-    let currentPrice = video.type === 'pump' ? 100 : 1000;
-
-    const render = () => {
-      if (!isPlaying) {
-        animeId = requestAnimationFrame(render);
-        return;
-      }
-      ticks++;
-
-      // Canvas setup
-      const w = canvas.width;
-      const h = canvas.height;
-      ctx.fillStyle = '#060708';
-      ctx.fillRect(0, 0, w, h);
-
-      // Simulate trading behavior
-      let drift = 0;
-      let noise = (Math.random() - 0.5) * 35;
-
-      if (video.id === 'rug-pull') {
-        if (ticks < 120) {
-          drift = 8; // pump it up
-        } else if (ticks >= 120 && ticks < 130) {
-          drift = -currentPrice * 0.45; // INSTANT CRASH
-          noise = 0;
-        } else {
-          drift = 0;
-          currentPrice = 1.2; // flatline
-          noise = 0;
-        }
-      } else if (video.id === 'liquidated') {
-        if (ticks < 150) {
-          drift = -2.5; // slow bleeder down
-        } else if (ticks >= 150 && ticks < 155) {
-          currentPrice = 0.5; // LIQUIDATION DROP
-          drift = 0;
-          noise = 0;
-        } else {
-          drift = 0.2;
-          noise = (Math.random() - 0.5) * 0.1;
-        }
-      } else if (video.type === 'pump') {
-        drift = 4.5; // continuous mooning
-      } else {
-        drift = -1.2; // regular bleeder
-      }
-
-      currentPrice = Math.max(0.5, currentPrice + drift + noise);
-      pricePoints.push(currentPrice);
-      if (pricePoints.length > 120) pricePoints.shift();
-
-      // Draw Grid Lines
-      ctx.strokeStyle = '#151719';
-      ctx.lineWidth = 1;
-      for (let i = 1; i < 5; i++) {
-        const y = (h / 5) * i;
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-      }
-
-      // Draw the chart path
-      if (pricePoints.length > 1) {
-        const min = Math.min(...pricePoints);
-        const max = Math.max(...pricePoints);
-        const diff = max - min || 1;
-
-        ctx.beginPath();
-        const startY = h - 20 - ((pricePoints[0] - min) / diff) * (h - 40);
-        ctx.moveTo(0, startY);
-
-        for (let i = 1; i < pricePoints.length; i++) {
-          const x = (w / (pricePoints.length - 1)) * i;
-          const y = h - 20 - ((pricePoints[i] - min) / diff) * (h - 40);
-          ctx.lineTo(x, y);
-        }
-
-        const isPump = pricePoints[pricePoints.length - 1] >= pricePoints[0];
-        ctx.strokeStyle = isPump ? '#34D399' : '#F5566E';
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-
-        // Fill area under line
-        ctx.lineTo(w, h);
-        ctx.lineTo(0, h);
-        const grad = ctx.createLinearGradient(0, 0, 0, h);
-        grad.addColorStop(0, isPump ? 'rgba(52,211,153,0.15)' : 'rgba(245,86,110,0.15)');
-        grad.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        // Print Current Price text overlay
-        ctx.fillStyle = isPump ? '#34D399' : '#F5566E';
-        ctx.font = 'bold 15px monospace';
-        ctx.fillText(`$${currentPrice.toFixed(2)}`, w - 110, 35);
-      }
-
-      // Draw Video Progress Bar Mock
-      ctx.fillStyle = 'rgba(255,255,255,0.15)';
-      ctx.fillRect(10, h - 10, w - 20, 3);
-      const prog = (ticks % 300) / 300;
-      ctx.fillStyle = '#FF9900';
-      ctx.fillRect(10, h - 10, (w - 20) * prog, 3);
-
-      // Flash "LIVE" badge if rug pull
-      if (video.id === 'rug-pull') {
-        const isCrash = ticks >= 120 && ticks < 135;
-        ctx.fillStyle = isCrash ? '#F5566E' : '#FF9900';
-        ctx.font = 'bold 10px sans-serif';
-        ctx.fillText(isCrash ? '⚡ RUG PULLING ⚡' : '● DEV STREAM', 20, 30);
-      } else if (video.id === 'liquidated' && ticks >= 145 && ticks < 165) {
-        ctx.fillStyle = '#F5566E';
-        ctx.font = 'bold 12px sans-serif';
-        ctx.fillText('🚨 LIQUIDATING 100x SHORT...', 20, 30);
-      } else {
-        ctx.fillStyle = '#A0AEC0';
-        ctx.font = '10px monospace';
-        ctx.fillText('1080p HD  ●  SIMULATED TAPE', 20, 28);
-      }
-
-      // Loop video
-      if (ticks >= 300) ticks = 0;
-
-      animeId = requestAnimationFrame(render);
-    };
-
-    render();
-    return () => cancelAnimationFrame(animeId);
-  }, [video, isPlaying]);
 
   // Append background bot comment stream over time
   useEffect(() => {
@@ -806,17 +671,31 @@ function PlayerModal({ video, onClose }: { video: Video; onClose: () => void }) 
         .ph-promo-box strong {
           color: #FF9900;
         }
+        .ph-modal-video {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          background: #000;
+          display: block;
+        }
+
+        /* ---- Mobile ---- */
+        @media (max-width: 640px) {
+          .ph-modal-overlay { padding: 0; }
+          .ph-modal { max-width: 100%; max-height: 100%; height: 100%; border-radius: 0; border: none; }
+          .ph-modal-info { padding: 12px; gap: 10px; }
+          .ph-modal-title { font-size: 13.5px; }
+          .ph-modal-meta { font-size: 10.5px; }
+          .ph-modal-body { flex-direction: column; overflow-y: auto; }
+          .ph-chat { border-right: none; border-bottom: 1.5px solid #232528; min-height: 150px; }
+          .ph-promo { width: 100%; }
+        }
       `}</style>
 
       <div className="ph-modal">
-        {/* Mock Screen Player */}
+        {/* Real video player */}
         <div className="ph-modal-player">
-          <canvas ref={canvasRef} width="640" height="360" className="ph-modal-canvas" />
-          <div className="ph-player-ctrls">
-            <button className="ph-player-btn" onClick={() => setIsPlaying(!isPlaying)}>
-              {isPlaying ? '⏸' : '▶'}
-            </button>
-          </div>
+          <video className="ph-modal-video" src={video.src} controls autoPlay loop playsInline />
         </div>
 
         {/* Video Info Header */}
