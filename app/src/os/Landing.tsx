@@ -439,7 +439,7 @@ export function Landing() {
               }}>
                 Launch OS Interface
               </a>
-              <a href="https://x.com" target="_blank" rel="noopener noreferrer" style={{
+              <a href="https://x.com/rhbots" target="_blank" rel="noopener noreferrer" style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 fontWeight: 700,
@@ -843,7 +843,7 @@ export function Landing() {
           </div>
 
           <div style={{ display: 'flex', gap: '12px' }}>
-            <a href="https://x.com" target="_blank" rel="noopener noreferrer" style={{
+            <a href="https://x.com/rhbots" target="_blank" rel="noopener noreferrer" style={{
               width: '40px',
               height: '40px',
               borderRadius: '10px',
@@ -868,7 +868,7 @@ export function Landing() {
             }}>
               𝕏
             </a>
-            <a href="https://t.me" target="_blank" rel="noopener noreferrer" style={{
+            <a href="https://t.me/rhbotsportal" target="_blank" rel="noopener noreferrer" style={{
               width: '40px',
               height: '40px',
               borderRadius: '10px',
