@@ -478,7 +478,7 @@ export function DegenFun() {
               </div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontWeight: 800, fontSize: '14px', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sel.name}</div>
-                <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--mono)' }}>${sel.ticker} / SOL</div>
+                <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--mono)' }}>${sel.ticker} / $</div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: '12px', flexShrink: 1, minWidth: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>

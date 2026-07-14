@@ -96,7 +96,7 @@ export function Login() {
             <div className="tag">{c.tag}</div>
             <h3>{c.name}</h3>
             <p>{c.desc}</p>
-            <div className="bag">{c.bag.toFixed(2)} SOL</div>
+            <div className="bag">${c.bag.toFixed(2)}</div>
           </div>
         ))}
       </div>
