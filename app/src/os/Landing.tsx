@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { AppIcon } from '../apps/icons';
 import { useIsMobile } from '../hooks/useIsMobile';
 
+const CONTRACT_ADDRESS = '0x6805de826bc68824bdc1f5c06f7fbde7b36e7777';
+const PRICE_CHART_URL = 'https://www.defined.fi/robinhood/0x6805De826BC68824BDC1f5c06f7FbDE7B36e7777?utm_source=rick&utm_medium=bots&cache=b13de&quoteToken=token0';
+
 // Custom lightweight scroll-reveal wrapper for premium animations
 function FadeInWhenVisible({ children }: { children: React.ReactNode }) {
   const [visible, setVisible] = useState(false);
@@ -67,7 +70,7 @@ export function Landing() {
   }, []);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText('TBA');
+    navigator.clipboard.writeText(CONTRACT_ADDRESS);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -382,7 +385,7 @@ export function Landing() {
                 fontSize: '13.5px'
               }}>
                 <span style={{ color: '#93A38C' }}>CA:</span>
-                <span style={{ fontWeight: 'bold', color: '#EAF2E6' }}>TBA</span>
+                <span style={{ fontWeight: 'bold', color: '#EAF2E6' }}>{CONTRACT_ADDRESS}</span>
                 <button onClick={handleCopy} style={{
                   background: 'transparent',
                   border: 'none',
@@ -587,7 +590,7 @@ export function Landing() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
               <div className="mkt-card">
                 <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: '#5E6B58', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Price</div>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: '32px', fontWeight: 700, color: '#C6ED1E', marginTop: '12px' }}>TBA</div>
+                <a href={PRICE_CHART_URL} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', fontFamily: 'var(--mono)', fontSize: '32px', fontWeight: 700, color: '#C6ED1E', marginTop: '12px', textDecoration: 'none' }}>View Chart</a>
               </div>
               <div className="mkt-card">
                 <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: '#5E6B58', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Market Cap</div>
@@ -604,7 +607,7 @@ export function Landing() {
             </div>
 
             <div style={{ textAlign: 'center', marginTop: '32px', fontFamily: 'var(--mono)', fontSize: '13px', color: '#5E6B58' }}>
-              Live chart &amp; contract details display here once the pool is finalized. CA: <span style={{ color: '#C6ED1E' }}>TBA</span>
+              Live chart &amp; contract details display here once the pool is finalized. CA: <span style={{ color: '#C6ED1E' }}>{CONTRACT_ADDRESS}</span>
             </div>
           </div>
         </FadeInWhenVisible>
@@ -893,7 +896,7 @@ export function Landing() {
             }}>
               TG
             </a>
-            <a href="#" target="_blank" rel="noopener noreferrer" title="DEX Chart" style={{
+            <a href={PRICE_CHART_URL} target="_blank" rel="noopener noreferrer" title="DEX Chart" style={{
               width: '40px',
               height: '40px',
               borderRadius: '10px',
